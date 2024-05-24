@@ -2,7 +2,7 @@
 
 "Up, and down, and in the end, it's only round and round and round..." - Pink Floyd, "Us and Them"
 
-Generate recurring periodoxical date/times, for (but not limited to) calendar-type applications. See Usage for more details.
+Generate recurring periodoxical date/times, for (but not limited to) calendar and scheduling applications. See Usage for more details.
 
 ## Installation
 
@@ -22,8 +22,45 @@ Or install it yourself as:
 
 ## Usage
 
-```
+```rb
+# generates all 9:00AM - 10:30AM, 2:00PM - 2:30PM time blocks on Mondays, Wednesdays, and Thursdays
+# between the dates of May 23, 2024 and June 24, 2024
 
+Periodoxical.generate(
+  time_zone: 'America/Los_Angeles',
+  days_of_week: %w[mon wed thu],
+  time_blocks: [
+    {
+      start_time: '9:00AM',
+      end_time: '10:30AM'
+    },
+    {
+      start_time: '2:00PM',
+      end_time: '2:30PM'
+    }
+  ],
+  start_date: Date.parse('2024-05-23'),
+  end_date: Date.parse('2024-06-24')
+)
+# returns an array of hashes, each with a :start, :end
+#=> 
+[
+    {
+        :start=>#<DateTime: 2024-05-23T16:00:00+00:00>,
+        :end=>#<DateTime: 2024-05-23T16:00:00+00:00>
+    },
+    {
+        :start=>#<DateTime: 2024-05-23T16:00:00+00:00>,
+        :end=>#<DateTime: 2024-05-23T16:00:00+00:00>
+    },
+    {
+        :start=>#<DateTime: 2024-05-30T16:00:00+00:00>,
+        :end=>#<DateTime: 2024-05-30T16:00:00+00:00>
+    },
+    {   :start=>#<DateTime: 2024-05-30T16:00:00+00:00>,
+        :end=>#<DateTime: 2024-05-30T16:00:00+00:00>
+    },
+]
 ```
 
 ## Development

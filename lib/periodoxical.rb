@@ -17,6 +17,17 @@ module Periodoxical
     #   TZInfo::DataTimezone#name from the tzinfo gem (https://github.com/tzinfo/tzinfo)
     # @param [Date] start_date
     # @param [Date] end_date
+    # @param [Array<Hash>] time_blocks
+    #   Ex: [
+    #     {
+    #       start_time: '9:00AM',
+    #       end_time: '10:30PM'
+    #     },
+    #     {
+    #       start_time: '2:00PM',
+    #       end_time: '2:30PM'
+    #     }
+    #   ]
     # @param [Array<String>, nil] days_of_week
     #   Days of the week to generate the times for, if nil, then times are generated
     #   for every day.

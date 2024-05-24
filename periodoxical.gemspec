@@ -10,15 +10,13 @@ Gem::Specification.new do |spec|
   spec.email         = ["stevenji@gmail.com"]
 
   spec.summary       = %q{Generating date/times based on rules.  Perfect (but not limited to) calendar/scheduling applications.}
-  spec.description   = %q{Generating date/times based on rules.  Perfect (but not limited to) calendar/scheduling applications.}
+  spec.description   = %q{Generating date/times based on rules.  Perfect (but not limited to) calendar/scheduling applications. Generate times based on rules like days of the week, timezones, durations, etc.}
   spec.homepage      = "https://github.com/StevenJL/periodoxical"
   spec.license       = "MIT"
 
   # Prevent pushing this gem to RubyGems.org. To allow pushes either set the 'allowed_push_host'
   # to allow pushing to a single host or delete this section to allow pushing to any host.
   if spec.respond_to?(:metadata)
-    spec.metadata["allowed_push_host"] = "TODO: Set to 'http://mygemserver.com'"
-
     spec.metadata["homepage_uri"] = spec.homepage
     spec.metadata["source_code_uri"] = "https://github.com/StevenJL/periodoxical"
     spec.metadata["changelog_uri"] = "https://github.com/StevenJL/periodoxical"
@@ -36,13 +34,13 @@ Gem::Specification.new do |spec|
   spec.executables   = spec.files.grep(%r{^exe/}) { |f| File.basename(f) }
   spec.require_paths = ["lib"]
 
-  spec.add_dependency "tzinfo", ">= 2.0.0"
+  spec.add_dependency 'tzinfo', '~> 2.0', '>= 2.0.0'
 
   spec.add_development_dependency "bundler", "~> 2.4"
   spec.add_development_dependency "rake", "~> 10.0"
   spec.add_development_dependency "rspec", "~> 3.0"
-  spec.add_development_dependency "pry-byebug"
-  spec.add_development_dependency "pry-stack_explorer"
+  spec.add_development_dependency "pry-byebug", "~> 3.10"
+  spec.add_development_dependency "pry-stack_explorer", "~> 0.6"
 
   spec.required_ruby_version = '>= 3.0.0'
 end

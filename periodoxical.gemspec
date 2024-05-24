@@ -9,8 +9,8 @@ Gem::Specification.new do |spec|
   spec.authors       = ["Steven Li"]
   spec.email         = ["stevenji@gmail.com"]
 
-  spec.summary       = %q{Generating date/times based on rules.  Perfect (but not limited to) calendar/scheduling applications.}
-  spec.description   = %q{Generating date/times based on rules.  Perfect (but not limited to) calendar/scheduling applications. Generate times based on rules like days of the week, timezones, durations, etc.}
+  spec.summary       = %q{Generating date/times based on rules.  Perfect for (but not limited to) calendar/scheduling applications.}
+  spec.description   = %q{Generating date/times based on rules.  Perfect for (but not limited to) calendar/scheduling applications. Generate times based on rules like days of the week, timezones, time blocks, start dates, end dates, etc.}
   spec.homepage      = "https://github.com/StevenJL/periodoxical"
   spec.license       = "MIT"
 

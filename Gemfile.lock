@@ -24,7 +24,7 @@ GEM
     pry-stack_explorer (0.6.1)
       binding_of_caller (~> 1.0)
       pry (~> 0.13)
-    rake (10.5.0)
+    rake (12.3.3)
     rspec (3.13.0)
       rspec-core (~> 3.13.0)
       rspec-expectations (~> 3.13.0)
@@ -49,7 +49,7 @@ DEPENDENCIES
   periodoxical!
   pry-byebug (~> 3.10)
   pry-stack_explorer (~> 0.6)
-  rake (~> 10.0)
+  rake (~> 12.3.3)
   rspec (~> 3.0)
 
 BUNDLED WITH

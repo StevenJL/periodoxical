@@ -37,7 +37,7 @@ Gem::Specification.new do |spec|
   spec.add_dependency 'tzinfo', '~> 2.0', '>= 2.0.0'
 
   spec.add_development_dependency "bundler", "~> 2.4"
-  spec.add_development_dependency "rake", "~> 10.0"
+  spec.add_development_dependency "rake", "~> 12.3.3"
   spec.add_development_dependency "rspec", "~> 3.0"
   spec.add_development_dependency "pry-byebug", "~> 3.10"
   spec.add_development_dependency "pry-stack_explorer", "~> 0.6"

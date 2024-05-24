@@ -2,7 +2,8 @@
 
 _"Up, and down, and in the end, it's only round and round and round..._" - Pink Floyd, "Us and Them"
 
-Generate recurring periodoxical date/times, for (but not limited to) calendar and scheduling applications. See Usage for more details.
+Generate periodic dates/times based on rules. Great for (but not limited to) calendar and scheduling applications. 
+See Usage for examples/details.
 
 ## Installation
 

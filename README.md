@@ -24,7 +24,7 @@ Or install it yourself as:
 ## Usage
 
 ```rb
-# generates 9:00AM - 10:30AM and 2:00PM - 2:30PM time blocks
+# Generates 9:00AM - 10:30AM and 2:00PM - 2:30PM time blocks
 # on Mondays, Wednesdays, and Thursdays, between the dates of
 # May 23, 2024 and June 24, 2024
 
@@ -47,23 +47,19 @@ Periodoxical.generate(
 # returns an array of hashes, each with a :start, :end
 #=> 
 [
-    {
-        :start=>#<DateTime: 2024-05-23T16:00:00+00:00>,
-        :end=>#<DateTime: 2024-05-23T16:00:00+00:00>
-    },
-    {
-        :start=>#<DateTime: 2024-05-23T16:00:00+00:00>,
-        :end=>#<DateTime: 2024-05-23T16:00:00+00:00>
-    },
-    {
-        :start=>#<DateTime: 2024-05-30T16:00:00+00:00>,
-        :end=>#<DateTime: 2024-05-30T16:00:00+00:00>
-    },
-    {   :start=>#<DateTime: 2024-05-30T16:00:00+00:00>,
-        :end=>#<DateTime: 2024-05-30T16:00:00+00:00>
-    },
-
-    ...
+  {
+    start: #<DateTime: 2024-05-23T16:00:00+00:00>,
+    end:   #<DateTime: 2024-05-24T05:30:00+00:00>,
+  },
+  {
+    start: #<DateTime: 2024-05-23T21:00:00+00:00>,
+    end:   #<DateTime: 2024-05-23T21:30:00+00:00>,
+  },
+ {
+    start: #<DateTime: 2024-05-27T16:00:00+00:00>,
+    end:   #<DateTime: 2024-05-28T05:30:00+00:00>
+ },
+ ...
 ]
 ```
 

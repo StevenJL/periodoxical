@@ -66,7 +66,7 @@ module Periodoxical
           @time_blocks.each do |tb|
             times << {
               start: time_str_to_object(current_date, tb[:start_time]),
-              end: time_str_to_object(current_date, tb[:end_date])
+              end: time_str_to_object(current_date, tb[:end_time])
             }
           end
         end
@@ -99,7 +99,13 @@ module Periodoxical
 
     def day_of_week_long_to_short(dow)
       {
-        "Thursday" => "thu"
+        "Monday" => "mon",
+        "Tuesday" => "tue",
+        "Wednesday" => "wed",
+        "Thursday" => "thu",
+        "Friday" => "fri",
+        "Saturday" => "sat",
+        "Sunday" => "sun",
       }[dow]
     end
 
@@ -107,7 +113,7 @@ module Periodoxical
     #   Ex: '9:00AM'
     # @param [Date] date
     def time_str_to_object(date, time_str)
-      time = Time.strptime("9:00AM", "%I:%M%p")
+      time = Time.strptime(time_str, "%I:%M%p")
       date_time = DateTime.new(
         date.year,
         date.month,

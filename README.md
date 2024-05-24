@@ -23,11 +23,9 @@ Or install it yourself as:
 
 ## Usage
 
-```rb
-# Generates 9:00AM - 10:30AM and 2:00PM - 2:30PM time blocks
-# on Mondays, Wednesdays, and Thursdays, between the dates of
-# May 23, 2024 and June 24, 2024
+Generates datetimes blocks of 9:00AM - 10:30AM and 2:00PM - 2:30PM, on Mondays, Wednesdays, and Thursdays, between the dates of May 23, 2024 and June 24, 2024
 
+```rb
 Periodoxical.generate(
   time_zone: 'America/Los_Angeles',
   days_of_week: %w[mon wed thu],
@@ -61,6 +59,27 @@ Periodoxical.generate(
  },
  ...
 ]
+```
+
+Generate the next 10 datetime blocks of 3:00PM - 4:30PM, on Sundays, after May 30, 2024
+
+```rb
+Periodoxical.generate(
+  time_zone: 'America/Los_Angeles',
+  days_of_week: %w[mon wed thu],
+  time_blocks: [
+    {
+      start_time: '9:00AM',
+      end_time: '10:30AM'
+    },
+    {
+      start_time: '2:00PM',
+      end_time: '2:30PM'
+    }
+  ],
+  start_date: Date.parse('2024-05-23'),
+  limit: 10
+)
 ```
 
 ## Development

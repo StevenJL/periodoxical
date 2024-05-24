@@ -42,7 +42,7 @@ module Periodoxical
     #     fri: { start_time: '7:00PM', end_time: '9:00PM' },
     #   }
     def initialize(time_zone: 'Etc/UTC', days_of_week: nil,
-                   start_date:, end_date:, time_blocks: nil, day_of_week_hours: nil, limit: nil)
+                   start_date:, end_date: nil, time_blocks: nil, day_of_week_hours: nil, limit: nil)
       @time_zone = TZInfo::Timezone.get(time_zone)
       @days_of_week = days_of_week
       @time_blocks = time_blocks
@@ -69,21 +69,32 @@ module Periodoxical
     private
 
     def generate_from_days_of_week_time_blocks
-      times = []
+      times_output = []
       current_date = @start_date
-      while current_date <= @end_date
+      current_count = 0
+      keep_generating = true
+      while keep_generating
         day_of_week = day_of_week_long_to_short(current_date.strftime("%A"))
         if @days_of_week.include?(day_of_week)
           @time_blocks.each do |tb|
-            times << {
+            times_output << {
               start: time_str_to_object(current_date, tb[:start_time]),
               end: time_str_to_object(current_date, tb[:end_time])
             }
+            current_count = current_count + 1
+            if @limit && current_count == @limit
+              keep_generating = false
+              break
+            end
           end
         end
         current_date = current_date + 1
+
+        if @end_date && (current_date > @end_date)
+          keep_generating = false
+        end
       end
-      times
+      times_output
     end
 
     def validate!
@@ -104,7 +115,12 @@ module Periodoxical
         end
       end
 
-      unless (@days_of_week && @start_time && @end_time) || (@day_of_week_hours)
+      unless (@days_of_week && @time_blocks) || (@day_of_week_hours)
+        raise "Need to provide either `days_of_week` and `time_blocks` or `day_of_week_hours`"
+      end
+
+      unless( @limit || @end_date)
+        raise "Either `limit` or `end_date` must be provided"
       end
     end
 

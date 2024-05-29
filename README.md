@@ -114,7 +114,7 @@ Periodoxical.generate(
 
 #### Example 3 - when time blocks vary between days
 
-As a ruby dev, I want to generate all the timeblocks between **May 23, 2024** and **June 12, 2024** where the time should be **8AM-9AM** on **Mondays**, but **10:45AM-12:00PM** and **2:00PM-4:00PM** on Wednesdays, and **2:30PM-4:15PM** on Thursdays.
+As a ruby dev, I want to generate all the timeblocks between **May 23, 2024** and **June 12, 2024** where the time should be **8AM-9AM** on **Mondays**, but **10:45AM-12:00PM** and **2:00PM-4:00PM** on **Wednesdays**, and **2:30PM-4:15PM** on **Thursdays**.
 
 <div align="center">
   <img width="628" alt="Screenshot 2024-05-28 at 11 44 50 PM" src="https://github.com/StevenJL/periodoxical/assets/2191808/26d14824-08ff-481a-97e2-9b6b11beea29">

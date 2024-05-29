@@ -6,11 +6,10 @@ _"Up, and down, and in the end, it's only round and round and round..._" - Pink 
   <img width="558" alt="pink_floyd_time" src="https://github.com/StevenJL/periodoxical/assets/2191808/8bab4a14-2df7-42d0-b6ae-f6b57a353500">
     <p><i>(Image Courtesy of "Pink Floyd: Time," directed by Ian Eames , ©1973)</i></p>
 </div>
-![time]()
 
+<br>
 
-Generate periodic dates/times based on rules. Great for (but not limited to) calendar and scheduling applications. 
-See Usage for examples/details.
+Generate periodic datetime blocks based on provided rules/conditions. Great for (but not limited to) calendar and scheduling applications. See Usage for detailed examples.
 
 ## Installation
 
@@ -37,7 +36,6 @@ As a Ruby dev, I want to generate all the datetimes blocks of **9:00AM - 10:30AM
   <img width="558" alt="calendar_image_1" src="https://github.com/StevenJL/periodoxical/assets/2191808/e92fc6ff-03fd-44ed-a955-d3a0dd0f5d0a">
     <p><i>(image courtesy of Cal.com)</i></p>
 </div>
-
 
 <br>
 

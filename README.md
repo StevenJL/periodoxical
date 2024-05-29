@@ -66,18 +66,14 @@ Generate the next 10 datetime blocks of 3:00PM - 4:30PM, on Sundays, after May 3
 ```rb
 Periodoxical.generate(
   time_zone: 'America/Los_Angeles',
-  days_of_week: %w[mon wed thu],
+  days_of_week: %w[sun],
   time_blocks: [
     {
-      start_time: '9:00AM',
-      end_time: '10:30AM'
-    },
-    {
-      start_time: '2:00PM',
-      end_time: '2:30PM'
+      start_time: '3:00PM',
+      end_time: '4:30PM'
     }
   ],
-  start_date: Date.parse('2024-05-23'),
+  start_date: Date.parse('2024-05-30'),
   limit: 10
 )
 ```

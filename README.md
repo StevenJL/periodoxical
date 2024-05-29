@@ -2,7 +2,11 @@
 
 _"Up, and down, and in the end, it's only round and round and round..._" - Pink Floyd, "Us and Them"
 
-![time](https://github.com/StevenJL/periodoxical/assets/2191808/8bab4a14-2df7-42d0-b6ae-f6b57a353500)
+<div align="center">
+  <img width="558" alt="pink_floyd_time" src="https://github.com/StevenJL/periodoxical/assets/2191808/8bab4a14-2df7-42d0-b6ae-f6b57a353500">
+    <p><i>(Image Courtesy of "Pink Floyd: Time," directed by Ian Eames , ©1973)</i></p>
+</div>
+![time]()
 
 
 Generate periodic dates/times based on rules. Great for (but not limited to) calendar and scheduling applications. 
@@ -30,7 +34,7 @@ Or install it yourself as:
 As a Ruby dev, I want to generate all the datetimes blocks of **9:00AM - 10:30AM** and **2:00PM - 2:30PM**, on **Mondays**, **Wednesdays**, and **Thursdays**, between the dates of **May 23, 2024** and **June 12, 2024**, inclusive. This can be represented visually as:
 
 <div align="center">
-  <img width="558" alt="Screenshot 2024-05-28 at 10 55 45 PM" src="https://github.com/StevenJL/periodoxical/assets/2191808/e92fc6ff-03fd-44ed-a955-d3a0dd0f5d0a">
+  <img width="558" alt="calendar_image_1" src="https://github.com/StevenJL/periodoxical/assets/2191808/e92fc6ff-03fd-44ed-a955-d3a0dd0f5d0a">
     <p><i>(image courtesy of Cal.com)</i></p>
 </div>
 
@@ -120,7 +124,7 @@ Periodoxical.generate(
 As a ruby dev, I want to generate all the timeblocks between **May 23, 2024** and **June 12, 2024** where the time should be **8AM-9AM** on **Mondays**, but **10:45AM-12:00PM** and **2:00PM-4:00PM** on **Wednesdays**, and **2:30PM-4:15PM** on **Thursdays**.
 
 <div align="center">
-  <img width="628" alt="Screenshot 2024-05-28 at 11 44 50 PM" src="https://github.com/StevenJL/periodoxical/assets/2191808/26d14824-08ff-481a-97e2-9b6b11beea29">
+  <img width="628" alt="calendar_image_2" src="https://github.com/StevenJL/periodoxical/assets/2191808/26d14824-08ff-481a-97e2-9b6b11beea29">
   <p><i>(image courtesy of Cal.com)</i></p>
 </div>
 

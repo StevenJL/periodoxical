@@ -62,13 +62,44 @@ module Periodoxical
     #   ]
     def generate
       if @days_of_week && @time_blocks
-        generate_from_days_of_week_time_blocks
+        generate_when_same_time_blocks_for_all_days
+      elsif @day_of_week_time_blocks
+        generate_when_different_time_blocks_between_days
       end
     end
 
     private
 
-    def generate_from_days_of_week_time_blocks
+    def generate_when_different_time_blocks_between_days
+      times_output = []
+      current_date = @start_date
+      current_count = 0
+      keep_generating = true
+      while keep_generating
+        day_of_week = day_of_week_long_to_short(current_date.strftime("%A"))
+        if @day_of_week_time_blocks[day_of_week.to_sym]
+          time_blocks = @day_of_week_time_blocks[day_of_week.to_sym]
+          time_blocks.each do |tb|
+            times_output << {
+              start: time_str_to_object(current_date, tb[:start_time]),
+              end: time_str_to_object(current_date, tb[:end_time])
+            }
+            current_count = current_count + 1
+            if @limit && current_count == @limit
+              keep_generating = false
+              break
+            end
+          end
+        end
+        current_date = current_date + 1
+        if @end_date && (current_date > @end_date)
+          keep_generating = false
+        end
+      end
+      times_output
+    end
+
+    def generate_when_same_time_blocks_for_all_days 
       times_output = []
       current_date = @start_date
       current_count = 0
@@ -109,7 +140,7 @@ module Periodoxical
 
       if @day_of_week_time_blocks
         @day_of_week_time_blocks.keys.each do |d|
-          unless VALID_DAYS_OF_WEEK.include?(d)
+          unless VALID_DAYS_OF_WEEK.include?(d.to_s)
             raise "#{d} is not a valid day of week format. Must be #{VALID_DAYS_OF_WEEK}"
           end
         end

@@ -23,7 +23,8 @@ Or install it yourself as:
 
 ## Usage
 
-**Example 1:** As a Ruby dev, I want to generate all the datetimes blocks of 9:00AM - 10:30AM and 2:00PM - 2:30PM, on Mondays, Wednesdays, and Thursdays, between the dates of May 23, 2024 and June 12, 2024, inclusive. This can be represented visually as:
+##### Example 1
+As a Ruby dev, I want to generate all the datetimes blocks of 9:00AM - 10:30AM and 2:00PM - 2:30PM, on Mondays, Wednesdays, and Thursdays, between the dates of May 23, 2024 and June 12, 2024, inclusive. This can be represented visually as:
 
 <div align="center">
   <img width="558" alt="Screenshot 2024-05-28 at 10 55 45 PM" src="https://github.com/StevenJL/periodoxical/assets/2191808/e92fc6ff-03fd-44ed-a955-d3a0dd0f5d0a">
@@ -73,7 +74,9 @@ Periodoxical.generate(
 ]
 ```
 
-**Example 2:** As a ruby dev, I want to generate the next 3 datetime blocks of 9:00AM - 10:30AM and 2:00PM - 2:30PM on Sundays, after May 23, 2024
+##### Example 2 - using the `limit` key.
+
+As a ruby dev, I want to generate the next 3 datetime blocks of 9:00AM - 10:30AM and 2:00PM - 2:30PM on Sundays, after May 23, 2024
 using the `limit` key.
 
 ```rb
@@ -108,6 +111,30 @@ Periodoxical.generate(
     end:   #<DateTime: 2024-06-02T22:30:00-0700>,
   },
 ]
+```
+
+##### Example 3 - when time blocks vary between days
+
+As a ruby dev, I want to generate all the timeblocks between May 23, 2024 and June 12, 2024 where the time should be 8AM-9AM on Mondays, but 10:45AM-12:00PM and 2:00PM and 4:00PM on Wednesdays, and 2:30PM to 4:15PM on Thursdays.
+
+```rb
+Periodoxical.generate(
+  time_zone: 'America/Los_Angeles',
+  start_date: Date.parse('2024-05-23'),
+  end_date: Date.parse('2024-06-12'),
+  day_of_week_time_blocks: {
+    mon: [
+      { start_time: '8:00AM', end_time: '9:00AM' },
+    ],
+    wed: [
+      { start_time: '10:45AM', end_time: '12:00PM' },
+      { start_time: '2:00PM', end_time: '4:00PM' },
+    ],
+    thu: [
+      { start_time: '2:30PM', end_time: '4:15PM' }
+    ],
+  }
+)
 ```
 
 ## Development

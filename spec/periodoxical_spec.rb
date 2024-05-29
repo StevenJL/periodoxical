@@ -179,8 +179,94 @@ RSpec.describe Periodoxical do
       end
     end
 
-    context 'when timeblock varies between days' do
-       
+    context 'when time blocks varies between days' do
+      subject do
+        Periodoxical.generate(
+          time_zone: 'America/Los_Angeles',
+          start_date: Date.parse('2024-05-23'),
+          end_date: Date.parse('2024-06-12'),
+          day_of_week_time_blocks: {
+            mon: [
+              { start_time: '8:00AM', end_time: '9:00AM' },
+            ],
+            wed: [
+              { start_time: '10:45AM', end_time: '12:00PM' },
+              { start_time: '2:00PM', end_time: '4:00PM' },
+            ],
+            thu: [
+              { start_time: '2:30PM', end_time: '4:15PM' }
+            ],
+          }
+        )
+      end
+
+      it 'generates correct time blocks' do
+        time_blocks = subject
+        timezone = TZInfo::Timezone.get('America/Los_Angeles')
+        time_blocks_str = time_blocks.map do |time_block|
+          start_time = time_block[:start]
+          end_time = time_block[:end]
+          start_time_converted = timezone.utc_to_local(start_time.new_offset(0))
+          end_time_converted = timezone.utc_to_local(end_time.new_offset(0))
+          {
+            start: start_time_converted.strftime('%Y-%m-%d %H:%M:%S %z'),
+            end: end_time_converted.strftime('%Y-%m-%d %H:%M:%S %z'),
+          }
+        end
+
+        expect(time_blocks_str).to eq(
+          [
+            {
+              :start=>"2024-05-23 14:30:00 -0700",
+              :end=>"2024-05-23 16:15:00 -0700"
+            },
+            {
+              :start=>"2024-05-27 08:00:00 -0700",
+              :end=>"2024-05-27 09:00:00 -0700"
+            },
+            {
+              :start=>"2024-05-29 10:45:00 -0700",
+              :end=>"2024-05-29 12:00:00 -0700"
+            },
+            {
+              :start=>"2024-05-29 14:00:00 -0700",
+              :end=>"2024-05-29 16:00:00 -0700"
+            },
+            {
+              :start=>"2024-05-30 14:30:00 -0700",
+              :end=>"2024-05-30 16:15:00 -0700"
+            },
+            {
+              :start=>"2024-06-03 08:00:00 -0700",
+              :end=>"2024-06-03 09:00:00 -0700"
+            },
+            {
+              :start=>"2024-06-05 10:45:00 -0700",
+              :end=>"2024-06-05 12:00:00 -0700"
+            },
+            {
+              :start=>"2024-06-05 14:00:00 -0700",
+              :end=>"2024-06-05 16:00:00 -0700"
+            },
+            {
+              :start=>"2024-06-06 14:30:00 -0700",
+              :end=>"2024-06-06 16:15:00 -0700"
+            },
+            {
+              :start=>"2024-06-10 08:00:00 -0700",
+              :end=>"2024-06-10 09:00:00 -0700"
+            },
+            {
+              :start=>"2024-06-12 10:45:00 -0700",
+              :end=>"2024-06-12 12:00:00 -0700"
+            },
+            {
+              :start=>"2024-06-12 14:00:00 -0700",
+              :end=>"2024-06-12 16:00:00 -0700"
+            }
+          ]
+        )
+      end
     end
   end
 end

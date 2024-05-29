@@ -2,6 +2,9 @@
 
 _"Up, and down, and in the end, it's only round and round and round..._" - Pink Floyd, "Us and Them"
 
+![time](https://github.com/StevenJL/periodoxical/assets/2191808/8bab4a14-2df7-42d0-b6ae-f6b57a353500)
+
+
 Generate periodic dates/times based on rules. Great for (but not limited to) calendar and scheduling applications. 
 See Usage for examples/details.
 

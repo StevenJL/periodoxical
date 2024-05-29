@@ -25,6 +25,10 @@ Or install it yourself as:
 
 Generates datetimes blocks of 9:00AM - 10:30AM and 2:00PM - 2:30PM, on Mondays, Wednesdays, and Thursdays, between the dates of May 23, 2024 and June 12, 2024, inclusively.
 
+Visually (screenshot from Cal.com)
+
+<img width="558" alt="Screenshot 2024-05-28 at 10 55 45 PM" src="https://github.com/StevenJL/periodoxical/assets/2191808/e92fc6ff-03fd-44ed-a955-d3a0dd0f5d0a">
+
 ```rb
 Periodoxical.generate(
   time_zone: 'America/Los_Angeles',

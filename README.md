@@ -28,6 +28,7 @@ Or install it yourself as:
 <div align="center">
   <img width="558" alt="Screenshot 2024-05-28 at 10 55 45 PM" src="https://github.com/StevenJL/periodoxical/assets/2191808/e92fc6ff-03fd-44ed-a955-d3a0dd0f5d0a">
 </div>
+_(image courtesy of Cal.com)_
 
 <br>
 

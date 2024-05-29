@@ -71,7 +71,7 @@ Periodoxical.generate(
 ]
 ```
 
-Generate the next 3 datetime blocks of 9:00AM - 10:30AM and 2:00PM - 2:30PM on Sundays, after May 23, 2024
+**Example 2:** As a ruby dev, I want to generate the next 3 datetime blocks of 9:00AM - 10:30AM and 2:00PM - 2:30PM on Sundays, after May 23, 2024
 using the `limit` key.
 
 ```rb

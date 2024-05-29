@@ -34,7 +34,7 @@ module Periodoxical
     #   Ex: %w(mon tue wed sat)
     # @param [Integer] limit
     #   How many date times to generate.  To be used when `end_date` is nil.
-    # @param [Hash<Hash>] day_of_week_hours
+    # @param [Hash<Hash>] day_of_week_time_blocks
     #   To be used when hours are different between days of the week
     #   Ex: {
     #     mon: [{ start_time: '10:15AM', end_time: '11:35AM' }, { start_time: '9:00AM' }, {end_time: '4:30PM'} ],
@@ -42,11 +42,11 @@ module Periodoxical
     #     fri: { start_time: '7:00PM', end_time: '9:00PM' },
     #   }
     def initialize(time_zone: 'Etc/UTC', days_of_week: nil,
-                   start_date:, end_date: nil, time_blocks: nil, day_of_week_hours: nil, limit: nil)
+                   start_date:, end_date: nil, time_blocks: nil, day_of_week_time_blocks: nil, limit: nil)
       @time_zone = TZInfo::Timezone.get(time_zone)
       @days_of_week = days_of_week
       @time_blocks = time_blocks
-      @day_of_week_hours = day_of_week_hours
+      @day_of_week_time_blocks = day_of_week_time_blocks
       @start_date = start_date
       @end_date = end_date
       @limit = limit
@@ -107,16 +107,16 @@ module Periodoxical
         end
       end
 
-      if @day_of_week_hours
-        @day_of_week_hours.keys.each do |d|
+      if @day_of_week_time_blocks
+        @day_of_week_time_blocks.keys.each do |d|
           unless VALID_DAYS_OF_WEEK.include?(d)
             raise "#{d} is not a valid day of week format. Must be #{VALID_DAYS_OF_WEEK}"
           end
         end
       end
 
-      unless (@days_of_week && @time_blocks) || (@day_of_week_hours)
-        raise "Need to provide either `days_of_week` and `time_blocks` or `day_of_week_hours`"
+      unless (@days_of_week && @time_blocks) || (@day_of_week_time_blocks)
+        raise "Need to provide either `days_of_week` and `time_blocks` or `day_of_week_time_blocks`"
       end
 
       unless( @limit || @end_date)

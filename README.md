@@ -23,7 +23,7 @@ Or install it yourself as:
 
 ## Usage
 
-Generates datetimes blocks of 9:00AM - 10:30AM and 2:00PM - 2:30PM, on Mondays, Wednesdays, and Thursdays, between the dates of May 23, 2024 and June 24, 2024
+Generates datetimes blocks of 9:00AM - 10:30AM and 2:00PM - 2:30PM, on Mondays, Wednesdays, and Thursdays, between the dates of May 23, 2024 and June 12, 2024, inclusively.
 
 ```rb
 Periodoxical.generate(
@@ -40,28 +40,33 @@ Periodoxical.generate(
     }
   ],
   start_date: Date.parse('2024-05-23'),
-  end_date: Date.parse('2024-06-24')
+  end_date: Date.parse('2024-06-12')
 )
-# returns an array of hashes, each with a :start, :end
+# returns an array of hashes, each with :start and :end keys
 #=> 
 [
   {
-    start: #<DateTime: 2024-05-23T16:00:00+00:00>,
-    end:   #<DateTime: 2024-05-24T05:30:00+00:00>,
+    start: #<DateTime: 2024-05-23T09:00:00-0700">,
+    end:   #<DateTime: 2024-05-23T22:30:00-0700">,
   },
   {
-    start: #<DateTime: 2024-05-23T21:00:00+00:00>,
-    end:   #<DateTime: 2024-05-23T21:30:00+00:00>,
+    start: #<DateTime: 2024-05-23T14:00:00-0700>,
+    end:   #<DateTime: 2024-05-23T14:30:00-0700>,
   },
  {
-    start: #<DateTime: 2024-05-27T16:00:00+00:00>,
-    end:   #<DateTime: 2024-05-28T05:30:00+00:00>
+    start: #<DateTime: 2024-05-27T09:00:00-0700>,
+    end:   #<DateTime: 2024-05-27T22:30:00-0700>
  },
  ...
+ {
+    start: #<DateTime: 2024-06-12T14:00:00-0700>,
+    end:   #<DateTime: 2024-06-12T14:30:00-0700>
+ }
 ]
 ```
 
-Generate the next 10 datetime blocks of 3:00PM - 4:30PM, on Sundays, after May 30, 2024
+Generate the next 3 datetime blocks of 9:00AM - 10:30AM and 2:00PM - 2:30PM on Sundays, after May 23, 2024
+using the `limit` key.
 
 ```rb
 Periodoxical.generate(
@@ -69,13 +74,32 @@ Periodoxical.generate(
   days_of_week: %w[sun],
   time_blocks: [
     {
-      start_time: '3:00PM',
-      end_time: '4:30PM'
+      start_time: '9:00AM',
+      end_time: '10:30PM'
+    },
+    {
+      start_time: '2:00PM',
+      end_time: '2:30PM'
     }
   ],
-  start_date: Date.parse('2024-05-30'),
-  limit: 10
+  start_date: Date.parse('2024-05-23'),
+  limit: 3
 )
+# =>
+[
+  {
+    start: #<DateTime: 2024-05-26T09:00:00-0700>,
+    end:   #<DateTime: 2024-05-26T22:30:00-0700>,
+  },
+  {
+    start: #<DateTime: 2024-05-26T14:00:00-0700>,
+    end:   #<DateTime: 2024-05-26T14:30:00-0700>,
+  },
+  {
+    start: #<DateTime: 2024-06-02T09:00:00-0700>,
+    end:   #<DateTime: 2024-06-02T22:30:00-0700>,
+  },
+]
 ```
 
 ## Development

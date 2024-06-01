@@ -32,6 +32,9 @@ module Periodoxical
     #   Days of the week to generate the times for, if nil, then times are generated
     #   for every day.
     #   Ex: %w(mon tue wed sat)
+    # @param [Array<Integer>, nil] days_of_month
+    #   Days of month to generate times for.
+    #   Ex: %w(5 10) - The 5th and 10th days of every month
     # @param [Integer] limit
     #   How many date times to generate.  To be used when `end_date` is nil.
     # @param [Aray<String>] exclusion_dates
@@ -88,61 +91,36 @@ module Periodoxical
     private
 
     def generate_when_different_time_blocks_between_days
-      times_output = []
-      current_date = @start_date
-      current_count = 0
-      keep_generating = true
-      while keep_generating
-        day_of_week = day_of_week_long_to_short(current_date.strftime("%A"))
-        if @day_of_week_time_blocks[day_of_week.to_sym] && !excluded_date?(current_date)
+      initialize_looping_variables!
+      while @keep_generating
+        day_of_week = day_of_week_long_to_short(@current_date.strftime("%A"))
+        if @day_of_week_time_blocks[day_of_week.to_sym] && !excluded_date?(@current_date)
           time_blocks = @day_of_week_time_blocks[day_of_week.to_sym]
-          time_blocks.each do |tb|
-            times_output << {
-              start: time_str_to_object(current_date, tb[:start_time]),
-              end: time_str_to_object(current_date, tb[:end_time])
-            }
-            current_count = current_count + 1
-            if @limit && current_count == @limit
-              keep_generating = false
-              break
+          catch :done do
+            time_blocks.each do |tb|
+              append_to_output_and_check(tb)
             end
           end
         end
-        current_date = current_date + 1
-        if @end_date && (current_date > @end_date)
-          keep_generating = false
-        end
+        advance_current_date_and_check_if_reached_end_date
       end
-      times_output
+      @output
     end
 
     def generate_when_same_time_blocks_for_all_days 
-      times_output = []
-      current_date = @start_date
-      current_count = 0
-      keep_generating = true
-      while keep_generating
-        day_of_week = day_of_week_long_to_short(current_date.strftime("%A"))
-        if @days_of_week.include?(day_of_week) && !excluded_date?(current_date)
-          @time_blocks.each do |tb|
-            times_output << {
-              start: time_str_to_object(current_date, tb[:start_time]),
-              end: time_str_to_object(current_date, tb[:end_time])
-            }
-            current_count = current_count + 1
-            if @limit && current_count == @limit
-              keep_generating = false
-              break
+      initialize_looping_variables!
+      while @keep_generating
+        day_of_week = day_of_week_long_to_short(@current_date.strftime("%A"))
+        if @days_of_week.include?(day_of_week) && !excluded_date?(@current_date)
+          catch :done do
+            @time_blocks.each do |tb|
+              append_to_output_and_check(tb)
             end
           end
         end
-        current_date = current_date + 1
-
-        if @end_date && (current_date > @end_date)
-          keep_generating = false
-        end
+        advance_current_date_and_check_if_reached_end_date 
       end
-      times_output
+      @output
     end
 
     def validate!
@@ -164,7 +142,15 @@ module Periodoxical
       end
 
       unless (@days_of_week && @time_blocks) || (@day_of_week_time_blocks) || (@days_of_month && @time_blocks)
-        raise "Need to provide either `days_of_week` and `time_blocks` or `day_of_week_time_blocks`"
+        raise "Need to provide either `days_of_week`/`days_of_month` and `time_blocks` or `day_of_week_time_blocks`"
+      end
+
+      if @days_of_month
+        @days_of_month.each do |dom|
+          unless dom.is_a?(Integer) && dom.between?(1,31)
+            raise 'days_of_months must be array of integers between 1 and 31'
+          end
+        end
       end
 
       unless( @limit || @end_date)
@@ -200,17 +186,54 @@ module Periodoxical
       @time_zone.local_to_utc(date_time).new_offset(@time_zone.current_period.offset.utc_total_offset)
     end
 
-    # @param [Date] current_date
+    # @param [Date] date
     # @return [Boolean]
     #   Whether or not the date is excluded
-    def excluded_date?(current_date)
+    def excluded_date?(date)
       return false unless @exclusion_dates
 
       @exclusion_dates.each do |ed|
-        return true if current_date == ed
+        return true if date == ed
       end
 
       false
+    end
+
+    # Variables which manage flow of looping through time and generating slots
+    def initialize_looping_variables!
+      @output = []
+      @current_date = @start_date
+      @current_count = 0
+      @keep_generating = true
+    end
+
+    # @param [Hash] time_block
+    #  Ex:
+    #  {
+    #    start_time: "9:00AM",
+    #    start_time: "10:00AM",
+    #  }
+    #  Generates time block but also checks if we should stop generating
+    def append_to_output_and_check(time_block)
+      @output << {
+        start: time_str_to_object(@current_date, time_block[:start_time]),
+        end: time_str_to_object(@current_date, time_block[:end_time])
+      }
+
+      # increment count, if `limit` is used to stop generating
+      @current_count = @current_count + 1
+      if @limit && @current_count == @limit
+        @keep_generating = false
+        throw :done
+      end
+    end
+
+    def advance_current_date_and_check_if_reached_end_date
+      @current_date = @current_date + 1
+
+      if @end_date && (@current_date > @end_date)
+        @keep_generating = false
+      end
     end
   end
 end

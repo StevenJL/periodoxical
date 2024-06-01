@@ -315,7 +315,7 @@ RSpec.describe Periodoxical do
           time_zone: 'America/Los_Angeles',
           start_date: '2024-06-3',
           limit: 4,
-          days_of_month: %w(5 10),
+          days_of_month: [5, 10],
           time_blocks: [
             { start_time: '8:00AM', end_time: '9:00AM' }
           ],

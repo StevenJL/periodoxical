@@ -3,6 +3,7 @@ PATH
   specs:
     periodoxical (0.6.2)
       tzinfo (~> 2.0, >= 2.0.0)
+      week_of_month (= 1.2.6)
 
 GEM
   remote: https://rubygems.org/
@@ -40,6 +41,7 @@ GEM
     rspec-support (3.13.1)
     tzinfo (2.0.6)
       concurrent-ruby (~> 1.0)
+    week_of_month (1.2.6)
 
 PLATFORMS
   arm64-darwin-22

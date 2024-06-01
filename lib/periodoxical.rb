@@ -2,6 +2,7 @@ require "periodoxical/version"
 require "date"
 require "time"
 require "tzinfo"
+require "week_of_month"
 
 module Periodoxical
   class << self
@@ -59,12 +60,14 @@ module Periodoxical
       time_zone: 'Etc/UTC',
       days_of_week: nil,
       days_of_month: nil,
+      weeks_of_month: nil,
       months: nil
     )
 
       @time_zone = TZInfo::Timezone.get(time_zone)
       @days_of_week = days_of_week
       @days_of_month = days_of_month
+      @weeks_of_month = weeks_of_month
       @months = months
       @time_blocks = time_blocks
       @day_of_week_time_blocks = day_of_week_time_blocks
@@ -84,17 +87,6 @@ module Periodoxical
     #       end: #<DateTime>,
     #     }
     #   ]
-#    def generate
-#      if @days_of_week && @time_blocks
-#        generate_when_same_time_blocks_for_days_of_week
-#      elsif @days_of_month && @time_blocks
-#        generate_when_same_time_blocks_for_days_of_month
-#      elsif @day_of_week_time_blocks
-#        generate_when_different_time_blocks_between_days
-#      end
-#      @output
-#    end
-
     def generate
       initialize_looping_variables!
       while @keep_generating
@@ -111,6 +103,14 @@ module Periodoxical
     def validate!
       unless @day_of_week_time_blocks || @time_blocks
         raise "`day_of_week_time_blocks` or `time_blocks` need to be provided"
+      end
+
+      if @weeks_of_month
+        @weeks_of_month.each do |wom|
+          unless wom.is_a?(Integer) && wom.between?(1, 5)
+            raise "weeks_of_month must be an array of integers between 1 and 5"
+          end
+        end
       end
 
       # days of week are valid
@@ -235,6 +235,11 @@ module Periodoxical
       # return false if current_date is explicitly excluded
       if @exclusion_dates
         return false if @exclusion_dates.include?(@current_date)
+      end
+
+      # If weeks_of_months are specified but not satisified, return false
+      if @weeks_of_month
+        return false unless @weeks_of_month.include?(@current_date.week_of_month)
       end
 
       # If months are specified, but current_date does not satisfy months,

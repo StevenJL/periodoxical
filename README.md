@@ -48,8 +48,8 @@ Periodoxical.generate(
       end_time: '2:30PM'
     }
   ],
-  start_date: Date.parse('2024-05-23'),
-  end_date: Date.parse('2024-06-12')
+  start_date: '2024-05-23',
+  end_date: '2024-06-12',
 )
 # returns an array of hashes, each with :start and :end keys
 #=> 
@@ -93,7 +93,7 @@ Periodoxical.generate(
       end_time: '2:30PM'
     }
   ],
-  start_date: Date.parse('2024-05-23'),
+  start_date: Date.parse('2024-05-23'), # Can also pass in `Date` object.
   limit: 3
 )
 # =>
@@ -120,8 +120,8 @@ As a ruby dev, I want to generate all the timeblocks between May 23, 2024 and Ju
 ```rb
 Periodoxical.generate(
   time_zone: 'America/Los_Angeles',
-  start_date: Date.parse('2024-05-23'),
-  end_date: Date.parse('2024-06-12'),
+  start_date: Date.parse('2024-05-23'), # can also pass in Date objects
+  end_date: Date.parse('2024-06-12'), # can also pass in Date objects,
   day_of_week_time_blocks: {
     mon: [
       { start_time: '8:00AM', end_time: '9:00AM' },

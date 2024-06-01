@@ -22,8 +22,8 @@ RSpec.describe Periodoxical do
               end_time: '2:30PM'
             }
           ],
-          start_date: Date.parse('2024-05-23'),
-          end_date: Date.parse('2024-06-12')
+          start_date: '2024-05-23',
+          end_date: '2024-06-12',
         )
       end
 

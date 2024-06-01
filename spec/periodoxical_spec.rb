@@ -268,5 +268,45 @@ RSpec.describe Periodoxical do
         )
       end
     end
+
+    context 'when exclusion_dates is provided' do
+      subject do
+        Periodoxical.generate(
+          time_zone: 'America/Los_Angeles',
+          start_date: '2024-06-3',
+          limit: 4,
+          exclusion_dates: %w(2024-06-10),
+          day_of_week_time_blocks: {
+            mon: [
+              { start_time: '8:00AM', end_time: '9:00AM' },
+            ],
+          }
+        )
+      end
+
+      it 'returns the correct dates' do
+        time_blocks = subject
+        timezone = TZInfo::Timezone.get('America/Los_Angeles')
+        time_blocks_str = time_blocks.map do |time_block|
+          start_time = time_block[:start]
+          end_time = time_block[:end]
+          start_time_converted = timezone.utc_to_local(start_time.new_offset(0))
+          end_time_converted = timezone.utc_to_local(end_time.new_offset(0))
+          {
+            start: start_time_converted.strftime('%Y-%m-%d %H:%M:%S %z'),
+            end: end_time_converted.strftime('%Y-%m-%d %H:%M:%S %z'),
+          }
+        end
+        # All 8AM - 9AM Monday except the Monday of June 10, 2024
+        expect(time_blocks_str).to eq(
+          [
+            {:start=>"2024-06-03 08:00:00 -0700", :end=>"2024-06-03 09:00:00 -0700"},
+            {:start=>"2024-06-17 08:00:00 -0700", :end=>"2024-06-17 09:00:00 -0700"},
+            {:start=>"2024-06-24 08:00:00 -0700", :end=>"2024-06-24 09:00:00 -0700"},
+            {:start=>"2024-07-01 08:00:00 -0700", :end=>"2024-07-01 09:00:00 -0700"}
+          ]
+        )
+      end
+    end
   end
 end

@@ -30,7 +30,43 @@ Or install it yourself as:
 ## Usage
 
 #### Example 1
-As a Ruby dev, I want to generate all the datetimes blocks of **9:00AM - 10:30AM** and **2:00PM - 2:30PM**, on **Mondays**, **Wednesdays**, and **Thursdays**, between the dates of **May 23, 2024** and **June 12, 2024**, inclusive. This can be represented visually as:
+As a Ruby dev, I want to generate all the datetime blocks of **9:00AM - 10:30AM**for all days from May 23, 2024 to May 26, 2024 inclusive.
+
+```rb
+Periodoxical.generate(
+  time_zone: 'America/Los_Angeles',
+  time_blocks: [
+    {
+      start_time: '9:00AM',
+      end_time: '10:30AM'
+    },
+  ],
+  start_date: '2024-05-23',
+  end_date: '2024-05-27',
+)
+#=> 
+[
+    {
+     start_time: #<DateTime: 2024-05-23T09:00:00-0700>,
+     end_time: #<DateTime: 2024-05-23T10:30:00-0700>,
+    },
+    {
+     start_time: #<DateTime: 2024-05-24T09:00:00-0700>,
+     end_time: #<DateTime: 2024-05-24T10:30:00-0700>,
+    },
+    {
+     start_time: #<DateTime: 2024-05-25T09:00:00-0700>,
+     end_time: #<DateTime: 2024-05-25T10:30:00-0700>,
+    },
+    {
+     start_time: #<DateTime: 2024-05-26T09:00:00-0700>,
+     end_time: #<DateTime: 2024-05-26T10:30:00-0700>,
+    }
+]
+```
+
+#### Example 2
+As a Ruby dev, I want to generate all the datetime blocks of **9:00AM - 10:30AM** and **2:00PM - 2:30PM**, on **Mondays**, **Wednesdays**, and **Thursdays**, between the dates of **May 23, 2024** and **June 12, 2024**, inclusive. This can be represented visually as:
 
 <div align="center">
   <img width="558" alt="calendar_image_1" src="https://github.com/StevenJL/periodoxical/assets/2191808/e92fc6ff-03fd-44ed-a955-d3a0dd0f5d0a">
@@ -79,7 +115,7 @@ Periodoxical.generate(
 ]
 ```
 
-#### Example 2 - using the `limit` key.
+#### Example 3 - using the `limit` key.
 
 As a ruby dev, I want to generate the next 3 datetime blocks of **9:00AM - 10:30AM** and **2:00PM - 2:30PM** on **Sundays**, after **May 23, 2024** using the `limit` key.
 
@@ -117,7 +153,7 @@ Periodoxical.generate(
 ]
 ```
 
-#### Example 3 - when time blocks vary between days
+#### Example 4 - when time blocks vary between days
 
 As a ruby dev, I want to generate all the timeblocks between **May 23, 2024** and **June 12, 2024** where the time should be **8AM-9AM** on **Mondays**, but **10:45AM-12:00PM** and **2:00PM-4:00PM** on **Wednesdays**, and **2:30PM-4:15PM** on **Thursdays**.
 
@@ -148,7 +184,73 @@ Periodoxical.generate(
 )
 ```
 
-#### Example 4 - Exclude time blocks using the `exclusion_dates` parameter
+#### Example 5 - when specifying time blocks occur by day-of-month and/or and/or week-of-month and/or month.
+
+As a Ruby dev, I want to generate the next 3 slots for 8AM - 9AM for the 5th and 10th day of every month starting from June
+
+```rb
+Periodoxical.generate(
+  time_zone: 'America/Los_Angeles',
+  start_date: '2024-06-1',
+  limit: 3,
+  days_of_month: [5, 10],
+  time_blocks: [
+    { start_time: '8:00AM', end_time: '9:00AM' },
+  ],
+)
+#=>
+[
+    {
+      start: #<DateTime: 2024-06-05 08:00:00 -0700>,
+      end: #<DateTime: 2024-06-05 09:00:00 -0700>,
+    },
+    {
+      start: #<DateTime: 2024-06-10 08:00:00 -0700>,
+      end: #<DateTime: 2024-06-10 09:00:00 -0700>,
+    },
+    {
+      start: #<DateTime: 2024-07-05 08:00:00 -0700>,
+      end: #<DateTime: 2024-07-05 09:00:00 -0700>,
+    },
+]
+```
+
+As a Ruby dev, I want to generate 4 slots for 8AM - 9AM on Mondays but only in the first two weeks in the months of April, May, June
+
+```
+Periodoxical.generate(
+  time_zone: 'America/Los_Angeles',
+  start_date: '2024-04-1',
+  limit: 4,
+  weeks_of_month: [1 2],
+  months: [4, 5, 6],
+  days_of_week: %w(mon),
+  time_blocks: [
+    { start_time: '8:00AM', end_time: '9:00AM' },
+  ],
+)
+#=> 
+[
+    {
+     start_time: #<DateTime: 2024-04-01 08:00:00 -0700>,
+     end_time: #<DateTime: 2024-04-01 09:00:00 -0700>,
+    },
+    {
+     start_time: #<DateTime: 2024-04-08 08:00:00 -0700>,
+     end_time: #<DateTime: 2024-04-08 09:00:00 -0700>,
+    },
+    {
+     start_time: #<DateTime: 2024-05-06 08:00:00 -0700>,
+     end_time: #<DateTime: 2024-05-06 09:00:00 -0700>,
+    },
+    {
+     start_time: #<DateTime: 2024-06-03 08:00:00 -0700>,
+     end_time: #<DateTime: 2024-06-03 09:00:00 -0700>,
+    },
+]
+```
+
+#### Example 6 - Exclude time blocks using the `exclusion_dates` parameter
 As a Ruby dev, I want to generate slots for 8AM - 9AM on Mondays, except for the Monday of June 10, 2024.
 
 ```rb
@@ -163,24 +265,24 @@ Periodoxical.generate(
     ],
   }
 )
-# Returns all Monday 8AM - 9AM blocks except for the june on June 10, 2024
+# Returns all Monday 8AM - 9AM blocks except for the Monday on June 10, 2024
 # => 
 [
     {
-      start: <#DateTime: 2024-06-03T08:00:00-0700>,
-      end: <#DateTime: 2024-06-03T09:00:00-0700>,
+      start: #<DateTime: 2024-06-03T08:00:00-0700>,
+      end: #<DateTime: 2024-06-03T09:00:00-0700>,
     }
     {
-      start: <#DateTime: 2024-06-17T08:00:00-0700>,
-      end: <#DateTime: 2024-06-17T09:00:00-0700>,
+      start: #<DateTime: 2024-06-17T08:00:00-0700>,
+      end: #<DateTime: 2024-06-17T09:00:00-0700>,
     }
     {
-      start: <#DateTime: 2024-06-24T08:00:00-0700>,
-      end: <#DateTime: 2024-06-24T09:00:00-0700>,
+      start: #<DateTime: 2024-06-24T08:00:00-0700>,
+      end: #<DateTime: 2024-06-24T09:00:00-0700>,
     }
     {
-      start: <#DateTime: 2024-07-01T08:00:00-0700>,
-      end: <#DateTime: 2024-07-01T09:00:00-0700>,
+      start: #<DateTime: 2024-07-01T08:00:00-0700>,
+      end: #<DateTime: 2024-07-01T09:00:00-0700>,
     }
 ]
 ```

@@ -308,5 +308,23 @@ RSpec.describe Periodoxical do
         )
       end
     end
+
+    context 'when days_of_month is provided' do
+      subject do
+        Periodoxical.generate(
+          time_zone: 'America/Los_Angeles',
+          start_date: '2024-06-3',
+          limit: 4,
+          days_of_month: %w(5 10),
+          time_blocks: [
+            { start_time: '8:00AM', end_time: '9:00AM' }
+          ],
+        )
+      end
+
+      it 'generates the correct days' do
+        subject
+      end
+    end
   end
 end

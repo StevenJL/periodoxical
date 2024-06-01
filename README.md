@@ -148,7 +148,23 @@ Periodoxical.generate(
 )
 ```
 
-#### Example 4 - Exclude time blocks using the `exclusion_dates` parameter
+#### Example 4 - when time blocks occur by weekly/monthly/yearly rules
+
+As a Ruby dev, I want to generate slots for 8AM - 9AM for the 5th and 10th day of every month
+
+```rb
+Periodoxical.generate(
+  time_zone: 'America/Los_Angeles',
+  start_date: '2024-06-3',
+  limit: 4,
+  days_of_month: %w(5 10),
+  time_blocks: [
+    { start_time: '8:00AM', end_time: '9:00AM' },
+  ],
+)
+```
+
+#### Example 5 - Exclude time blocks using the `exclusion_dates` parameter
 As a Ruby dev, I want to generate slots for 8AM - 9AM on Mondays, except for the Monday of June 10, 2024.
 
 ```rb

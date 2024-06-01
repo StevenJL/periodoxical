@@ -44,10 +44,21 @@ module Periodoxical
     #     tue: { start_time: '11:30PM', end_time: '12:00AM' },
     #     fri: { start_time: '7:00PM', end_time: '9:00PM' },
     #   }
-    def initialize(time_zone: 'Etc/UTC', days_of_week: nil,
-                   start_date:, end_date: nil, time_blocks: nil, day_of_week_time_blocks: nil, limit: nil, exclusion_dates: nil)
+    def initialize(
+      start_date:,
+      end_date: nil,
+      time_blocks: nil,
+      day_of_week_time_blocks: nil,
+      limit: nil,
+      exclusion_dates: nil,
+      time_zone: 'Etc/UTC',
+      days_of_week: nil,
+      days_of_month: nil
+    )
+
       @time_zone = TZInfo::Timezone.get(time_zone)
       @days_of_week = days_of_week
+      @days_of_month = days_of_month
       @time_blocks = time_blocks
       @day_of_week_time_blocks = day_of_week_time_blocks
       @start_date = start_date.is_a?(String) ? Date.parse(start_date) : start_date
@@ -152,7 +163,7 @@ module Periodoxical
         end
       end
 
-      unless (@days_of_week && @time_blocks) || (@day_of_week_time_blocks)
+      unless (@days_of_week && @time_blocks) || (@day_of_week_time_blocks) || (@days_of_month && @time_blocks)
         raise "Need to provide either `days_of_week` and `time_blocks` or `day_of_week_time_blocks`"
       end
 

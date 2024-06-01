@@ -148,6 +148,43 @@ Periodoxical.generate(
 )
 ```
 
+#### Example 4 - Exclude time blocks using the `exclusion_dates` parameter
+As a Ruby dev, I want to generate slots for 8AM - 9AM on Mondays, except for the Monday of June 10, 2024.
+
+```rb
+Periodoxical.generate(
+  time_zone: 'America/Los_Angeles',
+  start_date: '2024-06-3',
+  limit: 4,
+  exclusion_dates: %w(2024-06-10),
+  day_of_week_time_blocks: {
+    mon: [
+      { start_time: '8:00AM', end_time: '9:00AM' },
+    ],
+  }
+)
+# Returns all Monday 8AM - 9AM blocks except for the june on June 10, 2024
+# => 
+[
+    {
+      start: <#DateTime: 2024-06-03T08:00:00-0700>,
+      end: <#DateTime: 2024-06-03T09:00:00-0700>,
+    }
+    {
+      start: <#DateTime: 2024-06-17T08:00:00-0700>,
+      end: <#DateTime: 2024-06-17T09:00:00-0700>,
+    }
+    {
+      start: <#DateTime: 2024-06-24T08:00:00-0700>,
+      end: <#DateTime: 2024-06-24T09:00:00-0700>,
+    }
+    {
+      start: <#DateTime: 2024-07-01T08:00:00-0700>,
+      end: <#DateTime: 2024-07-01T09:00:00-0700>,
+    }
+]
+```
+
 ## Development
 
 After checking out the repo, run `bin/setup` to install dependencies. Then, run `rake spec` to run the tests. You can also run `bin/console` for an interactive prompt that will allow you to experiment.

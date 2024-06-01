@@ -34,6 +34,9 @@ module Periodoxical
     #   Ex: %w(mon tue wed sat)
     # @param [Integer] limit
     #   How many date times to generate.  To be used when `end_date` is nil.
+    # @param [Aray<String>] exclusion_dates
+    #   Dates to be excluded when generating the time blocks
+    #   Ex: ['2024-06-10', '2024-06-14']
     # @param [Hash<Hash>] day_of_week_time_blocks
     #   To be used when hours are different between days of the week
     #   Ex: {
@@ -42,7 +45,7 @@ module Periodoxical
     #     fri: { start_time: '7:00PM', end_time: '9:00PM' },
     #   }
     def initialize(time_zone: 'Etc/UTC', days_of_week: nil,
-                   start_date:, end_date: nil, time_blocks: nil, day_of_week_time_blocks: nil, limit: nil)
+                   start_date:, end_date: nil, time_blocks: nil, day_of_week_time_blocks: nil, limit: nil, exclusion_dates: nil)
       @time_zone = TZInfo::Timezone.get(time_zone)
       @days_of_week = days_of_week
       @time_blocks = time_blocks
@@ -50,6 +53,9 @@ module Periodoxical
       @start_date = start_date.is_a?(String) ? Date.parse(start_date) : start_date
       @end_date = end_date.is_a?(String) ? Date.parse(end_date) : end_date
       @limit = limit
+      @exclusion_dates = if exclusion_dates && !exclusion_dates.empty?
+                           exclusion_dates.map { |ed| Date.parse(ed) }
+                         end
       validate!
     end
 
@@ -77,7 +83,7 @@ module Periodoxical
       keep_generating = true
       while keep_generating
         day_of_week = day_of_week_long_to_short(current_date.strftime("%A"))
-        if @day_of_week_time_blocks[day_of_week.to_sym]
+        if @day_of_week_time_blocks[day_of_week.to_sym] && !excluded_date?(current_date)
           time_blocks = @day_of_week_time_blocks[day_of_week.to_sym]
           time_blocks.each do |tb|
             times_output << {
@@ -106,7 +112,7 @@ module Periodoxical
       keep_generating = true
       while keep_generating
         day_of_week = day_of_week_long_to_short(current_date.strftime("%A"))
-        if @days_of_week.include?(day_of_week)
+        if @days_of_week.include?(day_of_week) && !excluded_date?(current_date)
           @time_blocks.each do |tb|
             times_output << {
               start: time_str_to_object(current_date, tb[:start_time]),
@@ -181,6 +187,19 @@ module Periodoxical
         time.sec,
       )
       @time_zone.local_to_utc(date_time).new_offset(@time_zone.current_period.offset.utc_total_offset)
+    end
+
+    # @param [Date] current_date
+    # @return [Boolean]
+    #   Whether or not the date is excluded
+    def excluded_date?(current_date)
+      return false unless @exclusion_dates
+
+      @exclusion_dates.each do |ed|
+        return true if current_date == ed
+      end
+
+      false
     end
   end
 end

@@ -15,8 +15,8 @@ module Periodoxical
     # @param [String] time_zone
     #   Ex: 'America/Los_Angeles', 'America/Chicago',
     #   TZInfo::DataTimezone#name from the tzinfo gem (https://github.com/tzinfo/tzinfo)
-    # @param [Date] start_date
-    # @param [Date] end_date
+    # @param [Date, String] start_date
+    # @param [Date, String] end_date
     # @param [Array<Hash>] time_blocks
     #   Ex: [
     #     {
@@ -47,8 +47,8 @@ module Periodoxical
       @days_of_week = days_of_week
       @time_blocks = time_blocks
       @day_of_week_time_blocks = day_of_week_time_blocks
-      @start_date = start_date
-      @end_date = end_date
+      @start_date = start_date.is_a?(String) ? Date.parse(start_date) : start_date
+      @end_date = end_date.is_a?(String) ? Date.parse(end_date) : end_date
       @limit = limit
       validate!
     end

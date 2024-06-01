@@ -30,7 +30,7 @@ Or install it yourself as:
 ## Usage
 
 #### Example 1
-As a Ruby dev, I want to generate all the datetime blocks of **9:00AM - 10:30AM**for all days from May 23, 2024 to May 26, 2024 inclusive.
+As a Ruby dev, I want to generate all the datetime blocks of **9:00AM - 10:30AM** for all days from May 23, 2024 to May 26, 2024 inclusive.
 
 ```rb
 Periodoxical.generate(

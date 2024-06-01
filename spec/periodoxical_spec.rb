@@ -323,6 +323,57 @@ RSpec.describe Periodoxical do
       end
 
       it 'generates the correct days' do
+        time_blocks = subject
+        timezone = TZInfo::Timezone.get('America/Los_Angeles')
+        time_blocks_str = time_blocks.map do |time_block|
+          start_time = time_block[:start]
+          end_time = time_block[:end]
+          start_time_converted = timezone.utc_to_local(start_time.new_offset(0))
+          end_time_converted = timezone.utc_to_local(end_time.new_offset(0))
+          {
+            start: start_time_converted.strftime('%Y-%m-%d %H:%M:%S %z'),
+            end: end_time_converted.strftime('%Y-%m-%d %H:%M:%S %z'),
+          }
+        end
+
+        expect(time_blocks_str).to eq(
+          [
+            {
+              :start=>"2024-06-05 08:00:00 -0700",
+              :end=>"2024-06-05 09:00:00 -0700"
+            },
+            {
+              :start=>"2024-06-10 08:00:00 -0700",
+              :end=>"2024-06-10 09:00:00 -0700"
+            },
+            {
+              :start=>"2024-07-05 08:00:00 -0700",
+              :end=>"2024-07-05 09:00:00 -0700"
+            },
+            {
+              :start=>"2024-07-10 08:00:00 -0700",
+              :end=>"2024-07-10 09:00:00 -0700"
+            }
+          ]
+        )
+      end
+    end
+
+    context 'when months is provided' do
+      subject do
+        Periodoxical.generate(
+          time_zone: 'America/Los_Angeles',
+          start_date: '2024-04-3',
+          limit: 10,
+          months: [4, 5, 6],
+          days_of_week: %w(mon),
+          time_blocks: [
+            { start_time: '8:00AM', end_time: '9:00AM' },
+          ],
+        )
+      end
+
+      it 'generates the right timeblocks' do
         subject
       end
     end

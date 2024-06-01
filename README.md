@@ -148,7 +148,7 @@ Periodoxical.generate(
 )
 ```
 
-#### Example 4 - when time blocks occur by day-of-month rules
+#### Example 4 - when time blocks occur by day-of-month and/or month
 
 As a Ruby dev, I want to generate slots for 8AM - 9AM for the 5th and 10th day of every month
 
@@ -156,8 +156,38 @@ As a Ruby dev, I want to generate slots for 8AM - 9AM for the 5th and 10th day o
 Periodoxical.generate(
   time_zone: 'America/Los_Angeles',
   start_date: '2024-06-3',
-  limit: 4,
+  limit: 3,
   days_of_month: [5, 10],
+  time_blocks: [
+    { start_time: '8:00AM', end_time: '9:00AM' },
+  ],
+)
+#=>
+[
+    {
+      start: #<DateTime: 2024-06-05 08:00:00 -0700>,
+      end: #<DateTime: 2024-06-05 09:00:00 -0700>,
+    },
+    {
+      start: #<DateTime: 2024-06-10 08:00:00 -0700>,
+      end: #<DateTime: 2024-06-10 09:00:00 -0700>,
+    },
+    {
+      start: #<DateTime: 2024-07-05 08:00:00 -0700>,
+      end: #<DateTime: 2024-07-05 09:00:00 -0700>,
+    },
+]
+```
+
+As a Ruby dev, I want to generate slots for 8AM - 9AM for Mondays but only in the months of April, May, June
+
+```
+Periodoxical.generate(
+  time_zone: 'America/Los_Angeles',
+  start_date: '2024-06-3',
+  limit: 10,
+  months: [4, 5, 6],
+  days_of_week: %w(mon),
   time_blocks: [
     { start_time: '8:00AM', end_time: '9:00AM' },
   ],
@@ -183,20 +213,20 @@ Periodoxical.generate(
 # => 
 [
     {
-      start: <#DateTime: 2024-06-03T08:00:00-0700>,
-      end: <#DateTime: 2024-06-03T09:00:00-0700>,
+      start: #<DateTime: 2024-06-03T08:00:00-0700>,
+      end: #<DateTime: 2024-06-03T09:00:00-0700>,
     }
     {
-      start: <#DateTime: 2024-06-17T08:00:00-0700>,
-      end: <#DateTime: 2024-06-17T09:00:00-0700>,
+      start: #<DateTime: 2024-06-17T08:00:00-0700>,
+      end: #<DateTime: 2024-06-17T09:00:00-0700>,
     }
     {
-      start: <#DateTime: 2024-06-24T08:00:00-0700>,
-      end: <#DateTime: 2024-06-24T09:00:00-0700>,
+      start: #<DateTime: 2024-06-24T08:00:00-0700>,
+      end: #<DateTime: 2024-06-24T09:00:00-0700>,
     }
     {
-      start: <#DateTime: 2024-07-01T08:00:00-0700>,
-      end: <#DateTime: 2024-07-01T09:00:00-0700>,
+      start: #<DateTime: 2024-07-01T08:00:00-0700>,
+      end: #<DateTime: 2024-07-01T09:00:00-0700>,
     }
 ]
 ```

@@ -35,12 +35,14 @@ module Periodoxical
     # @param [Array<Integer>, nil] days_of_month
     #   Days of month to generate times for.
     #   Ex: %w(5 10) - The 5th and 10th days of every month
+    # @param [Array<Integer>, nil] months
+    #   Months as integers, where 1 = Jan, 12 = Dec
     # @param [Integer] limit
     #   How many date times to generate.  To be used when `end_date` is nil.
     # @param [Aray<String>] exclusion_dates
     #   Dates to be excluded when generating the time blocks
     #   Ex: ['2024-06-10', '2024-06-14']
-    # @param [Hash<Hash>] day_of_week_time_blocks
+    # @param [Hash<Array<Hash>>] day_of_week_time_blocks
     #   To be used when hours are different between days of the week
     #   Ex: {
     #     mon: [{ start_time: '10:15AM', end_time: '11:35AM' }, { start_time: '9:00AM' }, {end_time: '4:30PM'} ],
@@ -56,12 +58,14 @@ module Periodoxical
       exclusion_dates: nil,
       time_zone: 'Etc/UTC',
       days_of_week: nil,
-      days_of_month: nil
+      days_of_month: nil,
+      months: nil
     )
 
       @time_zone = TZInfo::Timezone.get(time_zone)
       @days_of_week = days_of_week
       @days_of_month = days_of_month
+      @months = months
       @time_blocks = time_blocks
       @day_of_week_time_blocks = day_of_week_time_blocks
       @start_date = start_date.is_a?(String) ? Date.parse(start_date) : start_date
@@ -80,50 +84,35 @@ module Periodoxical
     #       end: #<DateTime>,
     #     }
     #   ]
+#    def generate
+#      if @days_of_week && @time_blocks
+#        generate_when_same_time_blocks_for_days_of_week
+#      elsif @days_of_month && @time_blocks
+#        generate_when_same_time_blocks_for_days_of_month
+#      elsif @day_of_week_time_blocks
+#        generate_when_different_time_blocks_between_days
+#      end
+#      @output
+#    end
+
     def generate
-      if @days_of_week && @time_blocks
-        generate_when_same_time_blocks_for_all_days
-      elsif @day_of_week_time_blocks
-        generate_when_different_time_blocks_between_days
-      end
-    end
-
-    private
-
-    def generate_when_different_time_blocks_between_days
       initialize_looping_variables!
       while @keep_generating
-        day_of_week = day_of_week_long_to_short(@current_date.strftime("%A"))
-        if @day_of_week_time_blocks[day_of_week.to_sym] && !excluded_date?(@current_date)
-          time_blocks = @day_of_week_time_blocks[day_of_week.to_sym]
-          catch :done do
-            time_blocks.each do |tb|
-              append_to_output_and_check(tb)
-            end
-          end
+        if should_add_time_blocks_from_current_date?
+          add_time_blocks_from_current_date!
         end
         advance_current_date_and_check_if_reached_end_date
       end
       @output
     end
 
-    def generate_when_same_time_blocks_for_all_days 
-      initialize_looping_variables!
-      while @keep_generating
-        day_of_week = day_of_week_long_to_short(@current_date.strftime("%A"))
-        if @days_of_week.include?(day_of_week) && !excluded_date?(@current_date)
-          catch :done do
-            @time_blocks.each do |tb|
-              append_to_output_and_check(tb)
-            end
-          end
-        end
-        advance_current_date_and_check_if_reached_end_date 
-      end
-      @output
-    end
+    private
 
     def validate!
+      unless @day_of_week_time_blocks || @time_blocks
+        raise "`day_of_week_time_blocks` or `time_blocks` need to be provided"
+      end
+
       # days of week are valid
       if @days_of_week
         @days_of_week.each do |day|
@@ -141,14 +130,18 @@ module Periodoxical
         end
       end
 
-      unless (@days_of_week && @time_blocks) || (@day_of_week_time_blocks) || (@days_of_month && @time_blocks)
-        raise "Need to provide either `days_of_week`/`days_of_month` and `time_blocks` or `day_of_week_time_blocks`"
-      end
-
       if @days_of_month
         @days_of_month.each do |dom|
           unless dom.is_a?(Integer) && dom.between?(1,31)
             raise 'days_of_months must be array of integers between 1 and 31'
+          end
+        end
+      end
+
+      if @months
+        @months.each do |mon|
+          unless mon.is_a?(Integer) && mon.between?(1, 12)
+            raise 'months must be array of integers between 1 and 12'
           end
         end
       end
@@ -214,7 +207,7 @@ module Periodoxical
     #    start_time: "10:00AM",
     #  }
     #  Generates time block but also checks if we should stop generating
-    def append_to_output_and_check(time_block)
+    def append_to_output_and_check_limit(time_block)
       @output << {
         start: time_str_to_object(@current_date, time_block[:start_time]),
         end: time_str_to_object(@current_date, time_block[:end_time])
@@ -233,6 +226,62 @@ module Periodoxical
 
       if @end_date && (@current_date > @end_date)
         @keep_generating = false
+      end
+    end
+
+    # @return [Boolean]
+    #   Should time blocks be added based on the current_date?
+    def should_add_time_blocks_from_current_date?
+      # return false if current_date is explicitly excluded
+      if @exclusion_dates
+        return false if @exclusion_dates.include?(@current_date)
+      end
+
+      # If months are specified, but current_date does not satisfy months,
+      # return false
+      if @months
+        return false unless @months.include?(@current_date.month)
+      end
+
+      # If days of months are specified, but current_date does not satisfy it,
+      # return false
+      if @days_of_month
+        return false unless @days_of_month.include?(@current_date.day)
+      end
+
+      # If days of week are specified, but current_date does not satisfy it,
+      # return false
+      if @days_of_week
+        day_of_week = day_of_week_long_to_short(@current_date.strftime("%A"))
+        return false unless @days_of_week.include?(day_of_week)
+      end
+
+      if @day_of_week_time_blocks
+        day_of_week = day_of_week_long_to_short(@current_date.strftime("%A"))
+        dowtb = @day_of_week_time_blocks[day_of_week.to_sym]
+        return false if dowtb.nil?
+        return false if dowtb.empty?
+      end
+
+      # Otherwise, return true
+      true
+    end
+
+    def add_time_blocks_from_current_date!
+      if @day_of_week_time_blocks
+        day_of_week = day_of_week_long_to_short(@current_date.strftime("%A"))
+        time_blocks = @day_of_week_time_blocks[day_of_week.to_sym]
+        catch :done do
+          time_blocks.each do |tb|
+            append_to_output_and_check_limit(tb)
+          end
+        end
+      elsif @time_blocks
+        catch :done do
+          @time_blocks.each do |tb|
+            append_to_output_and_check_limit(tb)
+          end
+        end
       end
     end
   end

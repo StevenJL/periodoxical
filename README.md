@@ -186,7 +186,7 @@ Periodoxical.generate(
 
 #### Example 5 - when specifying time blocks occur by day-of-month and/or and/or week-of-month and/or month.
 
-As a Ruby dev, I want to generate the next 3 slots for 8AM - 9AM for the 5th and 10th day of every month starting from June
+As a Ruby dev, I want to generate the next 3 slots for **8AM - 9AM** for the **5th** and **10th** day of every month starting from **June**
 
 ```rb
 Periodoxical.generate(
@@ -215,7 +215,7 @@ Periodoxical.generate(
 ]
 ```
 
-As a Ruby dev, I want to generate 4 slots for 8AM - 9AM on Mondays but only in the first two weeks in the months of April, May, June
+As a Ruby dev, I want to generate **4** slots for **8AM - 9AM** on **Mondays** but only in the **first two weeks** in the months of **April, May, and June**
 
 ```
 Periodoxical.generate(

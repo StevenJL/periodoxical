@@ -259,6 +259,14 @@ module Periodoxical
       if @end_date && (@current_date > @end_date)
         @keep_generating = false
       end
+
+      # kill switch to stop infinite loop when `limit` is used but
+      # there is bug, or badly specified rules.  If @current_date goes into a
+      # 1000 years in the future, but no dates have been generated yet, this is
+      # most likely an infinite loop situation, and needs to be killed.
+      if @limit && ((@current_date - @start_date).to_i > 365000) && @output.empty?
+        raise "No end condition detected, causing infinite loop.  Please check rules/conditions or raise github issue for potential bug fixed"
+      end
     end
 
     # @return [Boolean]
@@ -318,8 +326,8 @@ module Periodoxical
         else
           # if day-of-week was not specified in nth_day_of_week_in_month,
           # it could have been specified in either `days_of_week` or `day_of_week_time_blocks and we unfortunately need to re-check those here. I cant think of a way to further DRY-it up.
-          return false unless @days_of_week && @day_of_week_time_blocks
-          if @day_of_week
+          return false unless @days_of_weeks || @day_of_week_time_blocks
+          if @day_of_weeks
             return false unless @days_of_week.include?(day_of_week)
           end
 

@@ -319,6 +319,8 @@ module Periodoxical
           else
             return @nth_day_of_week_in_month[day_of_week.to_sym].include?(n_occurence_of_day_of_week_in_month)
           end
+        else 
+          return false
         end
       end
 

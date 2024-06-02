@@ -146,12 +146,8 @@ module Periodoxical
           end
       end
 
-      if @days_of_week && @nth_day_of_week_in_month
-        # If both `days_of_week` and `nth_day_of_week_in_month` are provided for the same days-of-the-week, then it is ambiguous.  (ie. I want this timeslot for every Monday, but also only for the first Mondays, well which one is it?)
-        overlapping_days = @days_of_week & @nth_day_of_week_in_month.keys.map(&:to_s)
-        unless overlapping_days.empty?
-          raise "#{overlapping_days} is specified in both `days_of_week` and also `nth_day_of_week_in_month`, which leads to ambiguity.  Pleasee look at the README for examples."
-        end
+      if @nth_day_of_week_in_month && (@days_of_week || @day_of_week_time_blocks)
+        raise "nth_day_of_week_in_month parameter cannot be used in combination with `days_of_week` or `day_of_week_time_blocks`.  Please look at the README for examples."
       end
 
       if @day_of_week_time_blocks
@@ -261,8 +257,8 @@ module Periodoxical
       end
 
       # kill switch to stop infinite loop when `limit` is used but
-      # there is bug, or badly specified rules.  If @current_date goes into a
-      # 1000 years in the future, but no dates have been generated yet, this is
+      # there is bug, or poorly specified rules.  If @current_date goes into
+      # 1000 years in the future, but still no dates have been generated yet, this is
       # most likely an infinite loop situation, and needs to be killed.
       if @limit && ((@current_date - @start_date).to_i > 365000) && @output.empty?
         raise "No end condition detected, causing infinite loop.  Please check rules/conditions or raise github issue for potential bug fixed"
@@ -322,19 +318,6 @@ module Periodoxical
             return positivized_indices.include?(n_occurence_of_day_of_week_in_month)
           else
             return @nth_day_of_week_in_month[day_of_week.to_sym].include?(n_occurence_of_day_of_week_in_month)
-          end
-        else
-          # if day-of-week was not specified in nth_day_of_week_in_month,
-          # it could have been specified in either `days_of_week` or `day_of_week_time_blocks and we unfortunately need to re-check those here. I cant think of a way to further DRY-it up.
-          return false unless @days_of_weeks || @day_of_week_time_blocks
-          if @day_of_weeks
-            return false unless @days_of_week.include?(day_of_week)
-          end
-
-          if @day_of_week_time_blocks
-            dowtb = @day_of_week_time_blocks[day_of_week.to_sym]
-            return false if dowtb.nil?
-            return false if dowtb.empty?
           end
         end
       end

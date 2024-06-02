@@ -186,7 +186,7 @@ Periodoxical.generate(
 
 ### Example 5 - when specifying time blocks using day-of-month and/or week-of-month and/or month.
 
-As a Ruby dev, I want to generate the next 3 slots for **8AM - 9AM** for the **5th** and **10th** day of every month starting from **June**
+As a Ruby dev, I want to generate the next 3 timeblocks for **8AM - 9AM** for the **5th** and **10th** day of every month starting from **June**
 
 ```rb
 Periodoxical.generate(
@@ -215,7 +215,7 @@ Periodoxical.generate(
 ]
 ```
 
-As a Ruby dev, I want to generate **4** slots for **8AM - 9AM** on **Mondays** but only in the **first two weeks** in the months of **April, May, and June**
+As a Ruby dev, I want to generate **4** timeblocks for **8AM - 9AM** on **Mondays** but only in the **first two weeks** in the months of **April, May, and June**
 
 ```
 Periodoxical.generate(
@@ -251,7 +251,7 @@ Periodoxical.generate(
 ```
 
 ### Example 6 - Specify nth day-of-week in month (ie. first Monday of the Month, second Tuesday of the Month, last Friday of Month)
-As a Ruby dev, I want to generate slots for **8AM - 9AM** on the **first and second Mondays**  and **last Fridays** of every month starting in June 2024.  I can do this with the `nth_day_of_week_in_month` param.
+As a Ruby dev, I want to generate timeblocks for **8AM - 9AM** on the **first and second Mondays**  and **last Fridays** of every month starting in June 2024.  I can do this with the `nth_day_of_week_in_month` param.
 
 ```rb
 Periodoxical.generate(
@@ -292,7 +292,7 @@ Periodoxical.generate(
 ```
 
 ### Example 7 - Exclude time blocks using the `exclusion_dates` parameter
-As a Ruby dev, I want to generate slots for **8AM - 9AM** on **Mondays**, except for the **Monday of June 10, 2024**.
+As a Ruby dev, I want to generate timeblocks for **8AM - 9AM** on **Mondays**, except for the **Monday of June 10, 2024**.
 
 ```rb
 Periodoxical.generate(
@@ -326,6 +326,27 @@ Periodoxical.generate(
       end: #<DateTime: 2024-07-01T09:00:00-0700>,
     }
 ]
+```
+
+### Example 8 - Alternating day-of-week rules (ie. every other Tuesday, every 3rd Wednesday)
+
+As a Ruby dev, I want to generate timeblocks for **9AM - 10AM** on **every Monday**, but **every other Tuesday**, and **every other 3rd Wednesday**.
+I can do this using the `time_blocks` parameter, but add the `every_other_n` key for the day-of-the-week.
+
+```rb
+Periodoxical.generate(
+  time_zone: 'America/Los_Angeles',
+  start_date: '2024-06-01',
+  days_of_week: {
+    mon: { every_other_n: 1 }, # every Monday
+    tue: { every_other_n: 2 }, # every other Tuesday
+    wed: { every_other_n: 3 }, # every 3rd Wednesday
+  },
+  limit: 10,
+  time_blocks: [
+    { start_time: '9:00AM', end_time: '10:00AM' },
+  ],
+)
 ```
 
 ### Having Some Fun

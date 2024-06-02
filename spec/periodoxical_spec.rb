@@ -7,6 +7,22 @@ RSpec.describe Periodoxical do
   end
 
   describe '.generate' do
+    context 'validation' do
+      context 'when no time_blocks or day_of_week_time_blocks is provided' do
+        subject do
+          Periodoxical.generate(
+            time_zone: 'America/Los_Angeles',
+            start_date: '2024-05-23',
+            end_date: '2024-05-27',
+          )
+        end
+
+        it 'raises error' do
+          expect { subject }.to raise_error
+        end
+      end
+    end
+
     context 'when only time_blocks are provided' do
       subject do
         Periodoxical.generate(
@@ -512,6 +528,28 @@ RSpec.describe Periodoxical do
             {:start=>"2024-07-08 08:00:00 -0700", :end=>"2024-07-08 09:00:00 -0700"}
           ]
         )
+      end
+    end
+
+    context 'when alternating days of the week' do
+      subject do
+        Periodoxical.generate(
+          time_zone: 'America/Los_Angeles',
+          start_date: '2024-06-01',
+          days_of_week: {
+            mon: { every_other_n: 1 }, # every Monday
+            tue: { every_other_n: 2 }, # every other Tuesday
+            wed: { every_other_n: 3 }, # every 3rd Wednesday
+          },
+          limit: 10,
+          time_blocks: [
+            { start_time: '9:00AM', end_time: '10:00AM' },
+          ],
+        )
+      end
+
+      it 'generates the correct timeblocks' do
+        subject
       end
     end
 

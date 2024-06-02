@@ -472,5 +472,148 @@ RSpec.describe Periodoxical do
         )
       end
     end
+
+    context 'when nth_day_of_week_in_month is provided' do
+      subject do
+        Periodoxical.generate(
+          time_zone: 'America/Los_Angeles',
+          start_date: '2024-06-01',
+          limit: 5,
+          nth_day_of_week_in_month: {
+            mon: [1, 2],
+            fri: [-1]
+          },
+          time_blocks: [
+            { start_time: '8:00AM', end_time: '9:00AM' },
+          ],
+        )
+      end
+
+      it 'generates the right time blocks' do
+        time_blocks = subject
+        timezone = TZInfo::Timezone.get('America/Los_Angeles')
+        time_blocks_str = time_blocks.map do |time_block|
+          start_time = time_block[:start]
+          end_time = time_block[:end]
+          start_time_converted = timezone.utc_to_local(start_time.new_offset(0))
+          end_time_converted = timezone.utc_to_local(end_time.new_offset(0))
+          {
+            start: start_time_converted.strftime('%Y-%m-%d %H:%M:%S %z'),
+            end: end_time_converted.strftime('%Y-%m-%d %H:%M:%S %z'),
+          }
+        end
+
+        expect(time_blocks_str).to eq(
+          [
+            {:start=>"2024-06-03 08:00:00 -0700", :end=>"2024-06-03 09:00:00 -0700"},
+            {:start=>"2024-06-10 08:00:00 -0700", :end=>"2024-06-10 09:00:00 -0700"},
+            {:start=>"2024-06-28 08:00:00 -0700", :end=>"2024-06-28 09:00:00 -0700"},
+            {:start=>"2024-07-01 08:00:00 -0700", :end=>"2024-07-01 09:00:00 -0700"},
+            {:start=>"2024-07-08 08:00:00 -0700", :end=>"2024-07-08 09:00:00 -0700"}
+          ]
+        )
+      end
+    end
+
+    context 'Friday the 13ths' do
+      subject do
+        Periodoxical.generate(
+          time_zone: 'America/Los_Angeles',
+          start_date: '1980-05-01',
+          days_of_week: %w(fri),
+          days_of_month: [13],
+          limit: 10,
+          time_blocks: [
+            { start_time: '11:00PM', end_time: '12:00AM' },
+          ],
+        )
+      end
+
+      it 'generates the correct time slots' do
+        time_blocks = subject
+        timezone = TZInfo::Timezone.get('America/Los_Angeles')
+        time_blocks_str = time_blocks.map do |time_block|
+          start_time = time_block[:start]
+          end_time = time_block[:end]
+          start_time_converted = timezone.utc_to_local(start_time.new_offset(0))
+          end_time_converted = timezone.utc_to_local(end_time.new_offset(0))
+          {
+            start: start_time_converted.strftime('%Y-%m-%d %H:%M:%S %z'),
+            end: end_time_converted.strftime('%Y-%m-%d %H:%M:%S %z'),
+          }
+        end
+
+        expect(time_blocks_str).to eq(
+          [
+            {:start=>"1980-06-13 23:00:00 -0700",
+            :end=>"1980-06-13 00:00:00 -0700"},
+           {:start=>"1981-02-13 23:00:00 -0800",
+            :end=>"1981-02-13 00:00:00 -0800"},
+           {:start=>"1981-03-13 23:00:00 -0800",
+            :end=>"1981-03-13 00:00:00 -0800"},
+           {:start=>"1981-11-13 23:00:00 -0800",
+            :end=>"1981-11-13 00:00:00 -0800"},
+           {:start=>"1982-08-13 23:00:00 -0700",
+            :end=>"1982-08-13 00:00:00 -0700"},
+           {:start=>"1983-05-13 23:00:00 -0700",
+            :end=>"1983-05-13 00:00:00 -0700"},
+           {:start=>"1984-01-13 23:00:00 -0800",
+            :end=>"1984-01-13 00:00:00 -0800"},
+           {:start=>"1984-04-13 23:00:00 -0800",
+            :end=>"1984-04-13 00:00:00 -0800"},
+           {:start=>"1984-07-13 23:00:00 -0700",
+            :end=>"1984-07-13 00:00:00 -0700"},
+           {:start=>"1985-09-13 23:00:00 -0700",
+            :end=>"1985-09-13 00:00:00 -0700"}
+          ]
+        )
+      end
+    end
+
+    context 'Thanksgivings' do
+      subject do
+        Periodoxical.generate(
+          time_zone: 'America/Los_Angeles',
+          start_date: '2024-05-01',
+          months: [11],
+          nth_day_of_week_in_month: {
+            thu: [4],
+          },
+          limit: 10,
+          time_blocks: [
+            { start_time: '5:00PM', end_time: '6:00PM' },
+          ],
+        )
+      end
+
+      it 'generates the correct time slots' do
+        time_blocks = subject
+        timezone = TZInfo::Timezone.get('America/Los_Angeles')
+        time_blocks_str = time_blocks.map do |time_block|
+          start_time = time_block[:start]
+          end_time = time_block[:end]
+          start_time_converted = timezone.utc_to_local(start_time.new_offset(0))
+          end_time_converted = timezone.utc_to_local(end_time.new_offset(0))
+          {
+            start: start_time_converted.strftime('%Y-%m-%d %H:%M:%S %z'),
+            end: end_time_converted.strftime('%Y-%m-%d %H:%M:%S %z'),
+          }
+        end
+
+        expect(time_blocks_str).to eq(
+          [
+            {:start=>"2024-11-28 17:00:00 -0800", :end=>"2024-11-28 18:00:00 -0800"},
+            {:start=>"2025-11-27 17:00:00 -0800", :end=>"2025-11-27 18:00:00 -0800"},
+            {:start=>"2026-11-26 17:00:00 -0800", :end=>"2026-11-26 18:00:00 -0800"},
+            {:start=>"2027-11-25 17:00:00 -0800", :end=>"2027-11-25 18:00:00 -0800"},
+            {:start=>"2028-11-23 17:00:00 -0800", :end=>"2028-11-23 18:00:00 -0800"},
+            {:start=>"2029-11-22 17:00:00 -0800", :end=>"2029-11-22 18:00:00 -0800"},
+            {:start=>"2030-11-28 17:00:00 -0800", :end=>"2030-11-28 18:00:00 -0800"},
+            {:start=>"2031-11-27 17:00:00 -0800", :end=>"2031-11-27 18:00:00 -0800"},
+            {:start=>"2032-11-25 17:00:00 -0800", :end=>"2032-11-25 18:00:00 -0800"},
+            {:start=>"2033-11-24 17:00:00 -0800", :end=>"2033-11-24 18:00:00 -0800"}]
+        )
+      end
+    end
   end
 end

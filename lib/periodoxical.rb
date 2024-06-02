@@ -59,6 +59,7 @@ module Periodoxical
       exclusion_dates: nil,
       time_zone: 'Etc/UTC',
       days_of_week: nil,
+      nth_day_of_week_in_month: nil,
       days_of_month: nil,
       weeks_of_month: nil,
       months: nil
@@ -66,6 +67,7 @@ module Periodoxical
 
       @time_zone = TZInfo::Timezone.get(time_zone)
       @days_of_week = days_of_week
+      @nth_day_of_week_in_month = nth_day_of_week_in_month
       @days_of_month = days_of_month
       @weeks_of_month = weeks_of_month
       @months = months
@@ -105,6 +107,10 @@ module Periodoxical
         raise "`day_of_week_time_blocks` or `time_blocks` need to be provided"
       end
 
+      if @days_of_week && @day_of_week_time_blocks
+        raise "`days_of_week` and `day_of_week_time_blocks` are both provided, which leads to ambiguity.  Please use only one of these parameters."
+      end
+
       if @weeks_of_month
         @weeks_of_month.each do |wom|
           unless wom.is_a?(Integer) && wom.between?(1, 5)
@@ -119,6 +125,32 @@ module Periodoxical
           unless VALID_DAYS_OF_WEEK.include?(day.to_s)
             raise "#{day} is not valid day of week format.  Must be: #{VALID_DAYS_OF_WEEK}"
           end
+        end
+      end
+
+      if @nth_day_of_week_in_month
+        @nth_day_of_week_in_month.keys.each do |day|
+          unless VALID_DAYS_OF_WEEK.include?(day.to_s)
+            raise "#{day} is not valid day of week format.  Must be: #{VALID_DAYS_OF_WEEK}"
+          end
+        end
+          @nth_day_of_week_in_month.each do |k,v|
+            unless v.is_a?(Array)
+              raise "nth_day_of_week_in_month parameter is invalid.  Please look at the README for examples."
+            end
+            v.each do |num|
+              unless [-1,1,2,3,4,5].include?(num)
+                raise "nth_day_of_week_in_month parameter is invalid. Please look at the README for examples. "
+              end
+            end
+          end
+      end
+
+      if @days_of_week && @nth_day_of_week_in_month
+        # If both `days_of_week` and `nth_day_of_week_in_month` are provided for the same days-of-the-week, then it is ambiguous.  (ie. I want this timeslot for every Monday, but also only for the first Mondays, well which one is it?)
+        overlapping_days = @days_of_week & @nth_day_of_week_in_month.keys.map(&:to_s)
+        unless overlapping_days.empty?
+          raise "#{overlapping_days} is specified in both `days_of_week` and also `nth_day_of_week_in_month`, which leads to ambiguity.  Pleasee look at the README for examples."
         end
       end
 
@@ -254,18 +286,49 @@ module Periodoxical
         return false unless @days_of_month.include?(@current_date.day)
       end
 
+      # The following conditions depend on the day-of-week of current_date.
+      day_of_week = day_of_week_long_to_short(@current_date.strftime("%A"))
+
       # If days of week are specified, but current_date does not satisfy it,
       # return false
       if @days_of_week
-        day_of_week = day_of_week_long_to_short(@current_date.strftime("%A"))
         return false unless @days_of_week.include?(day_of_week)
       end
 
       if @day_of_week_time_blocks
-        day_of_week = day_of_week_long_to_short(@current_date.strftime("%A"))
         dowtb = @day_of_week_time_blocks[day_of_week.to_sym]
         return false if dowtb.nil?
         return false if dowtb.empty?
+      end
+
+      if @nth_day_of_week_in_month
+        # If the day of week is specified in nth_day_of_week_in_month,
+        # we need to investigate it whether or not to exclude it.
+        if @nth_day_of_week_in_month[day_of_week.to_sym]
+          n_occurence_of_day_of_week_in_month = ((@current_date.day - 1) / 7) + 1
+          # -1 is a special case and requires extra-math
+          if @nth_day_of_week_in_month[day_of_week.to_sym].include?(-1)
+            # We basically want to convert the -1 into its 'positive-equivalent` in this month, and compare it with that.
+            # For example, in June 2024, the Last Friday is also the 4th Friday.  So in that case, we convert the -1 into a 4.
+            positivized_indices = @nth_day_of_week_in_month[day_of_week.to_sym].map { |indx| positivize_index(indx, day_of_week) }
+            return positivized_indices.include?(n_occurence_of_day_of_week_in_month)
+          else
+            return @nth_day_of_week_in_month[day_of_week.to_sym].include?(n_occurence_of_day_of_week_in_month)
+          end
+        else
+          # if day-of-week was not specified in nth_day_of_week_in_month,
+          # it could have been specified in either `days_of_week` or `day_of_week_time_blocks and we unfortunately need to re-check those here. I cant think of a way to further DRY-it up.
+          return false unless @days_of_week && @day_of_week_time_blocks
+          if @day_of_week
+            return false unless @days_of_week.include?(day_of_week)
+          end
+
+          if @day_of_week_time_blocks
+            dowtb = @day_of_week_time_blocks[day_of_week.to_sym]
+            return false if dowtb.nil?
+            return false if dowtb.empty?
+          end
+        end
       end
 
       # Otherwise, return true
@@ -288,6 +351,26 @@ module Periodoxical
           end
         end
       end
+    end
+
+    # What is the positive index of the last day-of-week for the given month-year?
+    # For example, the last Friday in June 2024 is also the nth Friday.  What is this n?
+    # @return [Integer]
+    def positivize_index(indx, day_of_week)
+      # If index is already positive, just return it
+      return indx if indx > 0
+
+      # get last_day_of month
+      month = @current_date.month
+      year = @current_date.year
+      last_date = Date.new(year, month, -1)
+
+      # walk backwords until you get to the right day of the week
+      while day_of_week_long_to_short(last_date.strftime("%A")) != day_of_week
+        last_date = last_date - 1
+      end
+
+      ((last_date.day - 1) / 7) + 1
     end
   end
 end

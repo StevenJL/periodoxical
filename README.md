@@ -184,7 +184,7 @@ Periodoxical.generate(
 )
 ```
 
-### Example 5 - when specifying time blocks by day-of-month and/or and/or week-of-month and/or month.
+### Example 5 - when specifying time blocks using day-of-month and/or week-of-month and/or month.
 
 As a Ruby dev, I want to generate the next 3 slots for **8AM - 9AM** for the **5th** and **10th** day of every month starting from **June**
 
@@ -201,16 +201,16 @@ Periodoxical.generate(
 #=>
 [
     {
-      start: #<DateTime: 2024-06-05 08:00:00 -0700>,
-      end: #<DateTime: 2024-06-05 09:00:00 -0700>,
+      start: #<DateTime: 2024-06-05T08:00:00-0700>,
+      end: #<DateTime: 2024-06-05T09:00:00-0700>,
     },
     {
-      start: #<DateTime: 2024-06-10 08:00:00 -0700>,
-      end: #<DateTime: 2024-06-10 09:00:00 -0700>,
+      start: #<DateTime: 2024-06-10T08:00:00-0700>,
+      end: #<DateTime: 2024-06-10T09:00:00-0700>,
     },
     {
-      start: #<DateTime: 2024-07-05 08:00:00 -0700>,
-      end: #<DateTime: 2024-07-05 09:00:00 -0700>,
+      start: #<DateTime: 2024-07-05T08:00:00-0700>,
+      end: #<DateTime: 2024-07-05T09:00:00-0700>,
     },
 ]
 ```
@@ -232,25 +232,66 @@ Periodoxical.generate(
 #=> 
 [
     {
-     start_time: #<DateTime: 2024-04-01 08:00:00 -0700>,
-     end_time: #<DateTime: 2024-04-01 09:00:00 -0700>,
+     start_time: #<DateTime: 2024-04-01T08:00:00-0700>,
+     end_time: #<DateTime: 2024-04-01T09:00:00-0700>,
     },
     {
-     start_time: #<DateTime: 2024-04-08 08:00:00 -0700>,
-     end_time: #<DateTime: 2024-04-08 09:00:00 -0700>,
+     start_time: #<DateTime: 2024-04-08T08:00:00-0700>,
+     end_time: #<DateTime: 2024-04-08T09:00:00-0700>,
     },
     {
-     start_time: #<DateTime: 2024-05-06 08:00:00 -0700>,
-     end_time: #<DateTime: 2024-05-06 09:00:00 -0700>,
+     start_time: #<DateTime: 2024-05-06T08:00:00-0700>,
+     end_time: #<DateTime: 2024-05-06T09:00:00-0700>,
     },
     {
-     start_time: #<DateTime: 2024-06-03 08:00:00 -0700>,
-     end_time: #<DateTime: 2024-06-03 09:00:00 -0700>,
+     start_time: #<DateTime: 2024-06-03T08:00:00-0700>,
+     end_time: #<DateTime: 2024-06-03T09:00:00-0700>,
     },
 ]
 ```
 
-### Example 6 - Exclude time blocks using the `exclusion_dates` parameter
+### Example 6 - Specify nth day-of-week in month (ie. first Monday of the Month, second Tuesday of the Month, last Friday of Month)
+As a Ruby dev, I want to generate slots for **8AM - 9AM** on the **first and second Mondays**  and **last Fridays** of every month starting in June 2024.  I can do this with the `nth_day_of_week_in_month` param.
+
+```rb
+Periodoxical.generate(
+  time_zone: 'America/Los_Angeles',
+  start_date: '2024-06-01',
+  limit: 5,
+  nth_day_of_week_in_month: {
+    mon: [1, 2], # valid values: -1,1,2,3,4,5
+    fri: [-1], # Use -1 to specify "last" of the month.
+  },
+  time_blocks: [
+    { start_time: '8:00AM', end_time: '9:00AM' },
+  ],
+)
+# =>
+[
+  {
+    start: #<DateTime: 2024-06-03T08:00:00-0700>, # First Monday of June 2024
+    end: #<DateTime: 2024-06-03T09:00:00-0700>,
+  },
+  {
+    start: #<DateTime: 2024-06-10T08:00:00-0700>, # second Monday of June 2024
+    end: #<DateTime: 2024-06-10T09:00:00-0700>,
+  },
+  {
+    start: #<DateTime: 2024-06-28 08:00:00 -0700>, # last Friday of June 2024
+    end: #<DateTime: 2024-06-28 09:00:00 -0700>,
+  },
+  {
+    start: #<DateTime: 2024-07-01 08:00:00 -0700>, # First Monday of July 2024
+    end: #<DateTime: 2024-07-01 09:00:00 -0700>,
+  },
+  {
+    start: #<DateTime: 2024-07-08 08:00:00 -0700>, # Second Monday of July 2024
+    end: #<DateTime: 2024-07-08 09:00:00 -0700>,
+  },
+]
+```
+
+### Example 7 - Exclude time blocks using the `exclusion_dates` parameter
 As a Ruby dev, I want to generate slots for **8AM - 9AM** on **Mondays**, except for the **Monday of June 10, 2024**.
 
 ```rb
@@ -283,6 +324,83 @@ Periodoxical.generate(
     {
       start: #<DateTime: 2024-07-01T08:00:00-0700>,
       end: #<DateTime: 2024-07-01T09:00:00-0700>,
+    }
+]
+```
+
+### Having Some Fun
+
+Generate all the Friday the 13ths ever since May 1980 (when the first Friday the 13th film was released).
+
+```rb
+Periodoxical.generate(
+  time_zone: 'America/Los_Angeles',
+  start_date: '1980-05-01',
+  days_of_week: %w(fri),
+  days_of_month: [13],
+  limit: 100,
+  time_blocks: [
+    { start_time: '11:00PM', end_time: '12:00AM' },
+  ],
+)
+# =>
+[
+    {
+      start: #<DateTime: 1980-06-13T23:00:00-0700>,
+      end: #<DateTime: 1980-06-13T00:00:00-0700>,
+    },
+    {
+      start: #<DateTime: 1981-02-13T23:00:00-0800>,
+      end: #<DateTime: 1981-02-13T00:00:00-0800>,
+    },
+    {
+      start: #<DateTime: 1981-03-13T23:00:00-0800>,
+      end: #<DateTime: 1981-03-13T00:00:00-0800>,
+    },
+    {
+      start: #<DateTime: 1981-11-13T23:00:00-0800>,
+      end: #<DateTime: 1981-11-13T00:00:00-0800>,
+    }
+    ...
+]
+```
+
+Generate the next 10 Thanksgivings from now on (Thanksgivings is defined as the 4th Thursday in November).
+
+```rb
+Periodoxical.generate(
+  time_zone: 'America/Los_Angeles',
+  start_date: '2024-05-01',
+  months: [11],
+  nth_day_of_week_in_month: {
+    thu: [4],
+  },
+  limit: 10,
+  time_blocks: [
+    { start_time: '5:00PM', end_time: '6:00PM' },
+  ],
+)
+#=>
+[
+    {
+      start: #<DateTime: 2024-11-28T17:00:00-0800>,
+      end: #<DateTime: 2024-11-28T18:00:00-0800>,
+    },
+    {
+      start: #<DateTime: 2025-11-27T17:00:00-0800>,
+      end: #<DateTime: 2025-11-27T18:00:00-0800>,
+    },
+    {
+      start: #<DateTime: 2026-11-26T17:00:00-0800>,
+      end: #<DateTime: 2026-11-26T18:00:00-0800>,
+    },
+    {
+      start: #<DateTime: 2027-11-25T17:00:00-0800>,
+      end: #<DateTime: 2027-11-25T18:00:00-0800>,
+    },
+    {
+      start: #<DateTime: 2028-11-23T17:00:00-0800>,
+      end: #<DateTime: 2028-11-23T18:00:00-0800>,
     }
 ]
 ```

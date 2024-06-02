@@ -328,25 +328,67 @@ Periodoxical.generate(
 ]
 ```
 
-### Example 8 - Alternating day-of-week rules (ie. every other Tuesday, every 3rd Wednesday)
+### Example 8 - Every-other-nth day-of-week rules (ie. every other Tuesday, every 3rd Wednesday, every 10th Friday)
 
-As a Ruby dev, I want to generate timeblocks for **9AM - 10AM** on **every Monday**, but **every other Tuesday**, and **every other 3rd Wednesday**.
-I can do this using the `time_blocks` parameter, but add the `every_other_n` key for the day-of-the-week.
+As a Ruby dev, I want to generate timeblocks for **9AM- 10AM** on **every Monday**, but **every other Tuesday**, and **every other 3rd Wednesday**. I can do this using the `days_of_week` parameter, but also using the `every` and `every_other_nth` keys to specify the every-other-nth-rules.
 
 ```rb
 Periodoxical.generate(
   time_zone: 'America/Los_Angeles',
-  start_date: '2024-06-01',
+  start_date: '2024-12-30',
   days_of_week: {
-    mon: { every_other_n: 1 }, # every Monday
-    tue: { every_other_n: 2 }, # every other Tuesday
-    wed: { every_other_n: 3 }, # every 3rd Wednesday
+    mon: { every: true }, # every Monday (no skipping)
+    tue: { every_other_nth: 2 }, # every other Tuesday starting at first Tuesday from start date
+    wed: { every_other_nth: 3 }, # every 3rd Wednesday starting at first Wednesday from start date
   },
   limit: 10,
   time_blocks: [
     { start_time: '9:00AM', end_time: '10:00AM' },
   ],
 )
+#=> 
+[
+    {
+       start: #<DateTime: 2024-12-30T09:00:00-0800>,
+       end: #<DateTime: 2024-12-30T10:00:00-0800>,
+    },
+    {
+       start: #<DateTime: 2024-12-31T09:00:00-0800>,
+       end: #<DateTime: 2024-12-31T10:00:00-0800>,
+    },
+    {
+       start: #<DateTime: 2025-01-01T09:00:00-0800>,
+       end: #<DateTime: 2025-01-01T10:00:00-0800>,
+    },
+    {
+       start: #<DateTime: 2025-01-06T09:00:00-0800>,
+       end: #<DateTime: 2025-01-06T10:00:00-0800>,
+    },
+    {
+       start: #<DateTime: 2025-01-13T09:00:00-0800>,
+       end: #<DateTime: 2025-01-13T10:00:00-0800>,
+    },
+    {
+       start: #<DateTime: 2025-01-14T09:00:00-0800>,
+       end: #<DateTime: 2025-01-14T10:00:00-0800>,
+    },
+    {
+       start: #<DateTime: 2025-01-20T09:00:00-0800>,
+       end: #<DateTime: 2025-01-20T10:00:00-0800>,
+    },
+    {
+       start: #<DateTime: 2025-01-22T09:00:00-0800>,
+       end: #<DateTime: 2025-01-22T10:00:00-0800>,
+    },
+    {
+       start: #<DateTime: 2025-01-27T09:00:00-0800>,
+       end: #<DateTime: 2025-01-27T10:00:00-0800>,
+    },
+    {
+       start: #<DateTime: 2025-01-28T09:00:00-0800>,
+       end: #<DateTime: 2025-01-28T10:00:00-0800>,
+    }
+]
 ```
 
 ### Having Some Fun

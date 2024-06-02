@@ -159,6 +159,21 @@ module Periodoxical
       @current_day_of_week = day_of_week_long_to_short(@current_date.strftime("%A"))
       @current_count = 0
       @keep_generating = true
+      # When there are alternations in days of week
+      # (ie. every other Monday, every 3rd Thursday, etc).
+      # We keep running tally of day_of_week counts and use modulo-math to pick out
+      # every n-th one.
+      if @days_of_week_with_alternations
+        @days_of_week_running_tally = {
+          mon: 0,
+          tue: 0,
+          wed: 0,
+          thu: 0,
+          fri: 0,
+          sat: 0,
+          sun: 0,
+        }
+      end
     end
 
     # @param [Hash] time_block
@@ -184,6 +199,7 @@ module Periodoxical
 
     def advance_current_date_and_check_if_reached_end_date
       @current_date = @current_date + 1
+
       @current_day_of_week = day_of_week_long_to_short(@current_date.strftime("%A"))
 
       if @end_date && (@current_date > @end_date)
@@ -230,6 +246,28 @@ module Periodoxical
         return false unless @days_of_week.include?(@current_day_of_week)
       end
 
+      if @days_of_week_with_alternations
+        # current_date is not specified in days_of_week, so skip it
+        return false if @days_of_week_with_alternations[@current_day_of_week.to_sym].nil?
+
+        alternating_spec = @days_of_week_with_alternations[@current_day_of_week.to_sym]
+
+        # In the { every: true } case, we don't check the alternations logic, we just add it.
+        unless alternating_spec[:every]
+          # We are now specifying every other nth occurrence (ie. every 2nd Tuesday, every 3rd Wednesday)
+          alternating_frequency = alternating_spec[:every_other_nth]
+
+          unless (@days_of_week_running_tally[@current_day_of_week.to_sym] % alternating_frequency) == 0
+            # If day-of-week alternations are present, we need to keep track of day-of-weeks
+            # we have encountered and added or would have added so far.
+            update_days_of_week_running_tally!
+
+            return false
+          end
+          update_days_of_week_running_tally!
+        end
+      end
+
       if @day_of_week_time_blocks
         dowtb = @day_of_week_time_blocks[@current_day_of_week.to_sym]
         return false if dowtb.nil?
@@ -255,7 +293,20 @@ module Periodoxical
         end
       end
 
-      # Otherwise, return true
+      # The default return true is really only needed to support this use-case:
+      # Periodoxical.generate(
+      #   time_zone: 'America/Los_Angeles',
+      #   time_blocks: [
+      #     {
+      #       start_time: '9:00AM',
+      #       end_time: '10:30AM'
+      #     },
+      #   ],
+      #   start_date: '2024-05-23',
+      #   end_date: '2024-05-27',
+      # )
+      # where if we don't specify any date-of-week/month constraints, we return all consecutive dates.
+      # In the future, if we don't support this case, we can use `false` as the return value.
       true
     end
 
@@ -294,6 +345,10 @@ module Periodoxical
       end
 
       ((last_date.day - 1) / 7) + 1
+    end
+
+    def update_days_of_week_running_tally!
+      @days_of_week_running_tally[@current_day_of_week.to_sym] = @days_of_week_running_tally[@current_day_of_week.to_sym] + 1
     end
   end
 end

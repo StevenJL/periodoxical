@@ -28,9 +28,24 @@ module Periodoxical
       end
 
       if @days_of_week_with_alternations
-        @days_of_week_with_alternations.each do |dow, per|
+        @days_of_week_with_alternations.each do |dow, every_other|
           unless VALID_DAYS_OF_WEEK.include?(dow.to_s)
             raise "#{dow} is not valid day of week format.  Must be: #{VALID_DAYS_OF_WEEK}"
+          end
+          unless every_other.is_a?(Hash)
+            raise "days_of_week parameter is not used correctly.  Please look at examples in README."
+          end
+          unless every_other[:every] || every_other[:every_other_nth]
+            raise "days_of_week parameter is not used correctly.  Please look at examples in README."
+          end
+          if every_other[:every_other_nth]
+            unless every_other[:every_other_nth].is_a?(Integer)
+              raise "days_of_week parameter is not used correctly.  Please look at examples in README."
+            end
+
+            unless every_other[:every_other_nth] > 1
+              raise "days_of_week parameter is not used correctly.  Please look at examples in README."
+            end
           end
         end
       end

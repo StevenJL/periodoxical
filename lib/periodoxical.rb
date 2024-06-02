@@ -87,7 +87,11 @@ module Periodoxical
     #     {
     #       start: #<DateTime>,
     #       end: #<DateTime>,
-    #     }
+    #     },
+    #     {
+    #       start: #<DateTime>,
+    #       end: #<DateTime>,
+    #     },
     #   ]
     def generate
       initialize_looping_variables!
@@ -146,12 +150,8 @@ module Periodoxical
           end
       end
 
-      if @days_of_week && @nth_day_of_week_in_month
-        # If both `days_of_week` and `nth_day_of_week_in_month` are provided for the same days-of-the-week, then it is ambiguous.  (ie. I want this timeslot for every Monday, but also only for the first Mondays, well which one is it?)
-        overlapping_days = @days_of_week & @nth_day_of_week_in_month.keys.map(&:to_s)
-        unless overlapping_days.empty?
-          raise "#{overlapping_days} is specified in both `days_of_week` and also `nth_day_of_week_in_month`, which leads to ambiguity.  Pleasee look at the README for examples."
-        end
+      if @nth_day_of_week_in_month && (@days_of_week || @day_of_week_time_blocks)
+        raise "nth_day_of_week_in_month parameter cannot be used in combination with `days_of_week` or `day_of_week_time_blocks`.  Please look at the README for examples."
       end
 
       if @day_of_week_time_blocks
@@ -228,6 +228,7 @@ module Periodoxical
     def initialize_looping_variables!
       @output = []
       @current_date = @start_date
+      @current_day_of_week = day_of_week_long_to_short(@current_date.strftime("%A"))
       @current_count = 0
       @keep_generating = true
     end
@@ -255,9 +256,18 @@ module Periodoxical
 
     def advance_current_date_and_check_if_reached_end_date
       @current_date = @current_date + 1
+      @current_day_of_week = day_of_week_long_to_short(@current_date.strftime("%A"))
 
       if @end_date && (@current_date > @end_date)
         @keep_generating = false
+      end
+
+      # kill switch to stop infinite loop when `limit` is used but
+      # there is bug, or poorly specified rules.  If @current_date goes into
+      # 1000 years in the future, but still no dates have been generated yet, this is
+      # most likely an infinite loop situation, and needs to be killed.
+      if @limit && ((@current_date - @start_date).to_i > 365000) && @output.empty?
+        raise "No end condition detected, causing infinite loop.  Please check rules/conditions or raise github issue for potential bug fixed"
       end
     end
 
@@ -286,17 +296,14 @@ module Periodoxical
         return false unless @days_of_month.include?(@current_date.day)
       end
 
-      # The following conditions depend on the day-of-week of current_date.
-      day_of_week = day_of_week_long_to_short(@current_date.strftime("%A"))
-
       # If days of week are specified, but current_date does not satisfy it,
       # return false
       if @days_of_week
-        return false unless @days_of_week.include?(day_of_week)
+        return false unless @days_of_week.include?(@current_day_of_week)
       end
 
       if @day_of_week_time_blocks
-        dowtb = @day_of_week_time_blocks[day_of_week.to_sym]
+        dowtb = @day_of_week_time_blocks[@current_day_of_week.to_sym]
         return false if dowtb.nil?
         return false if dowtb.empty?
       end
@@ -304,30 +311,19 @@ module Periodoxical
       if @nth_day_of_week_in_month
         # If the day of week is specified in nth_day_of_week_in_month,
         # we need to investigate it whether or not to exclude it.
-        if @nth_day_of_week_in_month[day_of_week.to_sym]
+        if @nth_day_of_week_in_month[@current_day_of_week.to_sym]
           n_occurence_of_day_of_week_in_month = ((@current_date.day - 1) / 7) + 1
           # -1 is a special case and requires extra-math
-          if @nth_day_of_week_in_month[day_of_week.to_sym].include?(-1)
+          if @nth_day_of_week_in_month[@current_day_of_week.to_sym].include?(-1)
             # We basically want to convert the -1 into its 'positive-equivalent` in this month, and compare it with that.
             # For example, in June 2024, the Last Friday is also the 4th Friday.  So in that case, we convert the -1 into a 4.
-            positivized_indices = @nth_day_of_week_in_month[day_of_week.to_sym].map { |indx| positivize_index(indx, day_of_week) }
+            positivized_indices = @nth_day_of_week_in_month[@current_day_of_week.to_sym].map { |indx| positivize_index(indx, @current_day_of_week) }
             return positivized_indices.include?(n_occurence_of_day_of_week_in_month)
           else
-            return @nth_day_of_week_in_month[day_of_week.to_sym].include?(n_occurence_of_day_of_week_in_month)
+            return @nth_day_of_week_in_month[@current_day_of_week.to_sym].include?(n_occurence_of_day_of_week_in_month)
           end
         else
-          # if day-of-week was not specified in nth_day_of_week_in_month,
-          # it could have been specified in either `days_of_week` or `day_of_week_time_blocks and we unfortunately need to re-check those here. I cant think of a way to further DRY-it up.
-          return false unless @days_of_week && @day_of_week_time_blocks
-          if @day_of_week
-            return false unless @days_of_week.include?(day_of_week)
-          end
-
-          if @day_of_week_time_blocks
-            dowtb = @day_of_week_time_blocks[day_of_week.to_sym]
-            return false if dowtb.nil?
-            return false if dowtb.empty?
-          end
+          return false
         end
       end
 
@@ -337,8 +333,7 @@ module Periodoxical
 
     def add_time_blocks_from_current_date!
       if @day_of_week_time_blocks
-        day_of_week = day_of_week_long_to_short(@current_date.strftime("%A"))
-        time_blocks = @day_of_week_time_blocks[day_of_week.to_sym]
+        time_blocks = @day_of_week_time_blocks[@current_day_of_week.to_sym]
         catch :done do
           time_blocks.each do |tb|
             append_to_output_and_check_limit(tb)

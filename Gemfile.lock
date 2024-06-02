@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    periodoxical (0.6.2)
+    periodoxical (0.7.3)
       tzinfo (~> 2.0, >= 2.0.0)
       week_of_month (= 1.2.6)
 

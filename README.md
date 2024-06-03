@@ -332,6 +332,13 @@ Periodoxical.generate(
 
 As a Ruby dev, I want to generate timeblocks for **9AM- 10AM** on **every Monday**, but **every other Tuesday**, and **every other 3rd Wednesday**. I can do this using the `days_of_week` parameter, but also using the `every` and `every_other_nth` keys to specify the every-other-nth-rules.
 
+<div align="center">
+  <img width="1140" alt="alt_google_cal_image" src="https://github.com/StevenJL/periodoxical/assets/2191808/d663da17-a94a-4715-886a-8223b129dd60">
+  <p><i>(image courtesy of calendar.google.com)</i></p>
+</div>
+
+<br>
+
 ```rb
 Periodoxical.generate(
   time_zone: 'America/Los_Angeles',

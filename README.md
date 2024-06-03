@@ -473,7 +473,8 @@ Periodoxical.generate(
     {
       start: #<DateTime: 2028-11-23T17:00:00-0800>,
       end: #<DateTime: 2028-11-23T18:00:00-0800>,
-    }
+    },
+    ...
 ]
 ```
 

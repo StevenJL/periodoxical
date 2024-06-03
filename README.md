@@ -291,7 +291,7 @@ Periodoxical.generate(
 ]
 ```
 
-### Example 7 - Exclude time blocks using the `exclusion_dates` parameter
+### Example 7 - Exclude time blocks using the `exclusion_dates` and `exclusion_times` parameters
 As a Ruby dev, I want to generate timeblocks for **8AM - 9AM** on **Mondays**, except for the **Monday of June 10, 2024**.
 
 ```rb
@@ -325,6 +325,55 @@ Periodoxical.generate(
       start: #<DateTime: 2024-07-01T08:00:00-0700>,
       end: #<DateTime: 2024-07-01T09:00:00-0700>,
     }
+]
+```
+
+As a Ruby dev, I want to generate timeblocks for **8AM - 9AM**, and **10AM - 11AM** on **Mondays**, except for those that conflict (meaning overlap) with the time block of **10:30AM - 11:30AM** on the **Monday of June 10, 2024**.  I can skip the conflicting time blocks by using the `exclusion_times` parameter.
+
+```rb
+Periodoxical.generate(
+  time_zone: 'America/Los_Angeles',
+  start_date: '2024-06-3',
+  limit: 4,
+  days_of_week: %(mon),
+  time_blocks: [
+      { start_time: '8:00AM', end_time: '9:00AM' },
+      { start_time: '10:00AM', end_time: '11:00AM' },
+  ],
+  exclusion_times: [
+    {
+        start: '2024-06-10T10:30:00-07:00',
+        end: '2024-06-10T11:30:00-07:00',
+    }
+  ],
+)
+# =>
+[
+    {
+      start: #<DateTime 2024-06-03T08:00:00-0700>,
+      end: #<DateTime 2024-06-03T09:00:00-0700>,
+    },
+    {
+      start: #<DateTime 2024-06-03T10:00:00-0700>,
+      end: #<DateTime 2024-06-03T11:00:00-0700>,
+    },
+    {
+      start: #<DateTime 2024-06-10T08:00:00-0700>,
+      end: #<DateTime 2024-06-10T09:00:00-0700>,
+    },
+    # The June 10 10AM - 11AM was skipped because it overlapped with the June 10 10:30AM - 11:30AM exclusion time.
+    {
+      start: #<DateTime 2024-06-17T08:00:00-0700>,
+      end: #<DateTime 2024-06-17T09:00:00-0700>,
+    },
+    {
+      start: #<DateTime 2024-06-17T10:00:00-0700>,
+      end: #<DateTime 2024-06-17T11:00:00-0700>,
+    },
+    {
+      start: #<DateTime 2024-06-24T08:00:00-0700>,
+      end: #<DateTime 2024-06-24T09:00:00-0700>,
+    },
 ]
 ```
 

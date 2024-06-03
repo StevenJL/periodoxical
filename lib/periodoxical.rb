@@ -44,6 +44,19 @@ module Periodoxical
     # @param [Aray<String>] exclusion_dates
     #   Dates to be excluded when generating the time blocks
     #   Ex: ['2024-06-10', '2024-06-14']
+    # @param [Aray<Hash>] exclusion_times
+    #   Timeblocks to be excluded when generating the time blocks if there is conflict (ie. overlap)
+    #   Ex: [
+    #         {
+    #           start: '2024-06-10T10:30:00-07:00',
+    #           end: '2024-06-10T11:30:00-07:00'
+    #         },
+    #         {
+    #           start: '2024-06-10T14:30:00-07:00',
+    #           end: '2024-06-10T15:30:00-07:00'
+    #         },
+    #       ]
+    #
     # @param [Hash<Array<Hash>>] day_of_week_time_blocks
     #   To be used when hours are different between days of the week
     #   Ex: {
@@ -58,6 +71,7 @@ module Periodoxical
       day_of_week_time_blocks: nil,
       limit: nil,
       exclusion_dates: nil,
+      exclusion_times: nil,
       time_zone: 'Etc/UTC',
       days_of_week: nil,
       nth_day_of_week_in_month: nil,
@@ -83,6 +97,11 @@ module Periodoxical
       @limit = limit
       @exclusion_dates = if exclusion_dates && !exclusion_dates.empty?
                            exclusion_dates.map { |ed| Date.parse(ed) }
+                         end
+      @exclusion_times = if exclusion_times
+                           exclusion_times.map do |et|
+                             { start: DateTime.parse(et[:start]), end: DateTime.parse(et[:end]) }
+                           end
                          end
       validate!
     end
@@ -184,6 +203,9 @@ module Periodoxical
     #  }
     #  Generates time block but also checks if we should stop generating
     def append_to_output_and_check_limit(time_block)
+      # Check if this particular time is conflicts with any times from `exclusion_times`.
+      return if overlaps_with_an_excluded_time?(time_block)
+
       @output << {
         start: time_str_to_object(@current_date, time_block[:start_time]),
         end: time_str_to_object(@current_date, time_block[:end_time])
@@ -349,6 +371,44 @@ module Periodoxical
 
     def update_days_of_week_running_tally!
       @days_of_week_running_tally[@current_day_of_week.to_sym] = @days_of_week_running_tally[@current_day_of_week.to_sym] + 1
+    end
+
+    # @return [Boolean]
+    #   Whether or not the given `time_block` in the @current_date and
+    #   @time_zone overlaps with the times in `exclusion_times`.
+    def overlaps_with_an_excluded_time?(time_block)
+      return false unless @exclusion_times
+
+      @exclusion_times.each do |exclusion_timeblock|
+        return true if overlap?(
+          exclusion_timeblock,
+          {
+            start: time_str_to_object(@current_date, time_block[:start_time]),
+            end: time_str_to_object(@current_date, time_block[:end_time]),
+          }
+        )
+      end
+
+      false
+    end
+
+    # @param [Hash] time_block_1, time_block_2
+    #  Ex: {
+    #    start: #<DateTime>,
+    #    end: #<DateTime>,
+    #  }
+    def overlap?(time_block_1, time_block_2)
+      tb_1_start = time_block_1[:start]
+      tb_1_end = time_block_1[:end]
+      tb_2_start = time_block_2[:start]
+      tb_2_end = time_block_2[:end]
+
+      # Basicall overlap is when one starts before the other has ended
+      return true if tb_1_end > tb_2_start && tb_1_end < tb_2_end
+      # By symmetry
+      return true if tb_2_end > tb_1_start && tb_2_end < tb_1_end
+
+      false
     end
   end
 end

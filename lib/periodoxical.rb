@@ -1,4 +1,5 @@
 require "periodoxical/version"
+require "periodoxical/validation"
 require "date"
 require "time"
 require "tzinfo"
@@ -12,7 +13,7 @@ module Periodoxical
   end
 
   class Core
-    VALID_DAYS_OF_WEEK = %w[mon tue wed thu fri sat sun].freeze
+    include Periodoxical::Validation
     # @param [String] time_zone
     #   Ex: 'America/Los_Angeles', 'America/Chicago',
     #   TZInfo::DataTimezone#name from the tzinfo gem (https://github.com/tzinfo/tzinfo)
@@ -66,7 +67,11 @@ module Periodoxical
     )
 
       @time_zone = TZInfo::Timezone.get(time_zone)
-      @days_of_week = days_of_week
+      if days_of_week.is_a?(Array)
+        @days_of_week = days_of_week
+      elsif days_of_week.is_a?(Hash)
+        @days_of_week_with_alternations = days_of_week
+      end
       @nth_day_of_week_in_month = nth_day_of_week_in_month
       @days_of_month = days_of_month
       @weeks_of_month = weeks_of_month
@@ -105,83 +110,6 @@ module Periodoxical
     end
 
     private
-
-    def validate!
-      unless @day_of_week_time_blocks || @time_blocks
-        raise "`day_of_week_time_blocks` or `time_blocks` need to be provided"
-      end
-
-      if @days_of_week && @day_of_week_time_blocks
-        raise "`days_of_week` and `day_of_week_time_blocks` are both provided, which leads to ambiguity.  Please use only one of these parameters."
-      end
-
-      if @weeks_of_month
-        @weeks_of_month.each do |wom|
-          unless wom.is_a?(Integer) && wom.between?(1, 5)
-            raise "weeks_of_month must be an array of integers between 1 and 5"
-          end
-        end
-      end
-
-      # days of week are valid
-      if @days_of_week
-        @days_of_week.each do |day|
-          unless VALID_DAYS_OF_WEEK.include?(day.to_s)
-            raise "#{day} is not valid day of week format.  Must be: #{VALID_DAYS_OF_WEEK}"
-          end
-        end
-      end
-
-      if @nth_day_of_week_in_month
-        @nth_day_of_week_in_month.keys.each do |day|
-          unless VALID_DAYS_OF_WEEK.include?(day.to_s)
-            raise "#{day} is not valid day of week format.  Must be: #{VALID_DAYS_OF_WEEK}"
-          end
-        end
-          @nth_day_of_week_in_month.each do |k,v|
-            unless v.is_a?(Array)
-              raise "nth_day_of_week_in_month parameter is invalid.  Please look at the README for examples."
-            end
-            v.each do |num|
-              unless [-1,1,2,3,4,5].include?(num)
-                raise "nth_day_of_week_in_month parameter is invalid. Please look at the README for examples. "
-              end
-            end
-          end
-      end
-
-      if @nth_day_of_week_in_month && (@days_of_week || @day_of_week_time_blocks)
-        raise "nth_day_of_week_in_month parameter cannot be used in combination with `days_of_week` or `day_of_week_time_blocks`.  Please look at the README for examples."
-      end
-
-      if @day_of_week_time_blocks
-        @day_of_week_time_blocks.keys.each do |d|
-          unless VALID_DAYS_OF_WEEK.include?(d.to_s)
-            raise "#{d} is not a valid day of week format. Must be #{VALID_DAYS_OF_WEEK}"
-          end
-        end
-      end
-
-      if @days_of_month
-        @days_of_month.each do |dom|
-          unless dom.is_a?(Integer) && dom.between?(1,31)
-            raise 'days_of_months must be array of integers between 1 and 31'
-          end
-        end
-      end
-
-      if @months
-        @months.each do |mon|
-          unless mon.is_a?(Integer) && mon.between?(1, 12)
-            raise 'months must be array of integers between 1 and 12'
-          end
-        end
-      end
-
-      unless( @limit || @end_date)
-        raise "Either `limit` or `end_date` must be provided"
-      end
-    end
 
     def day_of_week_long_to_short(dow)
       {
@@ -231,6 +159,21 @@ module Periodoxical
       @current_day_of_week = day_of_week_long_to_short(@current_date.strftime("%A"))
       @current_count = 0
       @keep_generating = true
+      # When there are alternations in days of week
+      # (ie. every other Monday, every 3rd Thursday, etc).
+      # We keep running tally of day_of_week counts and use modulo-math to pick out
+      # every n-th one.
+      if @days_of_week_with_alternations
+        @days_of_week_running_tally = {
+          mon: 0,
+          tue: 0,
+          wed: 0,
+          thu: 0,
+          fri: 0,
+          sat: 0,
+          sun: 0,
+        }
+      end
     end
 
     # @param [Hash] time_block
@@ -256,6 +199,7 @@ module Periodoxical
 
     def advance_current_date_and_check_if_reached_end_date
       @current_date = @current_date + 1
+
       @current_day_of_week = day_of_week_long_to_short(@current_date.strftime("%A"))
 
       if @end_date && (@current_date > @end_date)
@@ -302,6 +246,28 @@ module Periodoxical
         return false unless @days_of_week.include?(@current_day_of_week)
       end
 
+      if @days_of_week_with_alternations
+        # current_date is not specified in days_of_week, so skip it
+        return false if @days_of_week_with_alternations[@current_day_of_week.to_sym].nil?
+
+        alternating_spec = @days_of_week_with_alternations[@current_day_of_week.to_sym]
+
+        # In the { every: true } case, we don't check the alternations logic, we just add it.
+        unless alternating_spec[:every]
+          # We are now specifying every other nth occurrence (ie. every 2nd Tuesday, every 3rd Wednesday)
+          alternating_frequency = alternating_spec[:every_other_nth]
+
+          unless (@days_of_week_running_tally[@current_day_of_week.to_sym] % alternating_frequency) == 0
+            # If day-of-week alternations are present, we need to keep track of day-of-weeks
+            # we have encountered and added or would have added so far.
+            update_days_of_week_running_tally!
+
+            return false
+          end
+          update_days_of_week_running_tally!
+        end
+      end
+
       if @day_of_week_time_blocks
         dowtb = @day_of_week_time_blocks[@current_day_of_week.to_sym]
         return false if dowtb.nil?
@@ -327,7 +293,20 @@ module Periodoxical
         end
       end
 
-      # Otherwise, return true
+      # The default return true is really only needed to support this use-case:
+      # Periodoxical.generate(
+      #   time_zone: 'America/Los_Angeles',
+      #   time_blocks: [
+      #     {
+      #       start_time: '9:00AM',
+      #       end_time: '10:30AM'
+      #     },
+      #   ],
+      #   start_date: '2024-05-23',
+      #   end_date: '2024-05-27',
+      # )
+      # where if we don't specify any date-of-week/month constraints, we return all consecutive dates.
+      # In the future, if we don't support this case, we can use `false` as the return value.
       true
     end
 
@@ -366,6 +345,10 @@ module Periodoxical
       end
 
       ((last_date.day - 1) / 7) + 1
+    end
+
+    def update_days_of_week_running_tally!
+      @days_of_week_running_tally[@current_day_of_week.to_sym] = @days_of_week_running_tally[@current_day_of_week.to_sym] + 1
     end
   end
 end

@@ -7,6 +7,22 @@ RSpec.describe Periodoxical do
   end
 
   describe '.generate' do
+    context 'validation' do
+      context 'when no time_blocks or day_of_week_time_blocks is provided' do
+        subject do
+          Periodoxical.generate(
+            time_zone: 'America/Los_Angeles',
+            start_date: '2024-05-23',
+            end_date: '2024-05-27',
+          )
+        end
+
+        it 'raises error' do
+          expect { subject }.to raise_error
+        end
+      end
+    end
+
     context 'when only time_blocks are provided' do
       subject do
         Periodoxical.generate(
@@ -510,6 +526,84 @@ RSpec.describe Periodoxical do
             {:start=>"2024-06-28 08:00:00 -0700", :end=>"2024-06-28 09:00:00 -0700"},
             {:start=>"2024-07-01 08:00:00 -0700", :end=>"2024-07-01 09:00:00 -0700"},
             {:start=>"2024-07-08 08:00:00 -0700", :end=>"2024-07-08 09:00:00 -0700"}
+          ]
+        )
+      end
+    end
+
+    context 'when alternating days of the week' do
+      subject do
+        Periodoxical.generate(
+          time_zone: 'America/Los_Angeles',
+          start_date: '2024-12-30',
+          days_of_week: {
+            mon: { every: true }, # every Monday
+            tue: { every_other_nth: 2 }, # every other Tuesday
+            wed: { every_other_nth: 3 }, # every 3rd Wednesday
+          },
+          limit: 10,
+          time_blocks: [
+            { start_time: '9:00AM', end_time: '10:00AM' },
+          ],
+        )
+      end
+
+      it 'generates the correct timeblocks' do
+        time_blocks = subject
+        timezone = TZInfo::Timezone.get('America/Los_Angeles')
+        time_blocks_str = time_blocks.map do |time_block|
+          start_time = time_block[:start]
+          end_time = time_block[:end]
+          start_time_converted = timezone.utc_to_local(start_time.new_offset(0))
+          end_time_converted = timezone.utc_to_local(end_time.new_offset(0))
+          {
+            start: start_time_converted.strftime('%Y-%m-%d %H:%M:%S %z'),
+            end: end_time_converted.strftime('%Y-%m-%d %H:%M:%S %z'),
+          }
+        end
+
+        expect(time_blocks_str).to eq(
+          [
+            {
+              :start=>"2024-12-30 09:00:00 -0800",
+              :end=>"2024-12-30 10:00:00 -0800"
+            },
+            {
+              :start=>"2024-12-31 09:00:00 -0800",
+              :end=>"2024-12-31 10:00:00 -0800"
+            },
+            {
+              :start=>"2025-01-01 09:00:00 -0800",
+              :end=>"2025-01-01 10:00:00 -0800"
+            },
+            {
+              :start=>"2025-01-06 09:00:00 -0800",
+              :end=>"2025-01-06 10:00:00 -0800"
+            },
+            {
+              :start=>"2025-01-13 09:00:00 -0800",
+              :end=>"2025-01-13 10:00:00 -0800"
+            },
+            {
+              :start=>"2025-01-14 09:00:00 -0800",
+              :end=>"2025-01-14 10:00:00 -0800"
+            },
+            {
+              :start=>"2025-01-20 09:00:00 -0800",
+              :end=>"2025-01-20 10:00:00 -0800"
+            },
+            {
+              :start=>"2025-01-22 09:00:00 -0800",
+              :end=>"2025-01-22 10:00:00 -0800"
+            },
+            {
+              :start=>"2025-01-27 09:00:00 -0800",
+              :end=>"2025-01-27 10:00:00 -0800"
+            },
+            {
+              :start=>"2025-01-28 09:00:00 -0800",
+              :end=>"2025-01-28 10:00:00 -0800"
+            }
           ]
         )
       end

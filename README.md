@@ -186,7 +186,7 @@ Periodoxical.generate(
 
 ### Example 5 - when specifying time blocks using day-of-month and/or week-of-month and/or month.
 
-As a Ruby dev, I want to generate the next 3 slots for **8AM - 9AM** for the **5th** and **10th** day of every month starting from **June**
+As a Ruby dev, I want to generate the next 3 timeblocks for **8AM - 9AM** for the **5th** and **10th** day of every month starting from **June**
 
 ```rb
 Periodoxical.generate(
@@ -215,7 +215,7 @@ Periodoxical.generate(
 ]
 ```
 
-As a Ruby dev, I want to generate **4** slots for **8AM - 9AM** on **Mondays** but only in the **first two weeks** in the months of **April, May, and June**
+As a Ruby dev, I want to generate **4** timeblocks for **8AM - 9AM** on **Mondays** but only in the **first two weeks** in the months of **April, May, and June**
 
 ```
 Periodoxical.generate(
@@ -251,7 +251,7 @@ Periodoxical.generate(
 ```
 
 ### Example 6 - Specify nth day-of-week in month (ie. first Monday of the Month, second Tuesday of the Month, last Friday of Month)
-As a Ruby dev, I want to generate slots for **8AM - 9AM** on the **first and second Mondays**  and **last Fridays** of every month starting in June 2024.  I can do this with the `nth_day_of_week_in_month` param.
+As a Ruby dev, I want to generate timeblocks for **8AM - 9AM** on the **first and second Mondays**  and **last Fridays** of every month starting in June 2024.  I can do this with the `nth_day_of_week_in_month` param.
 
 ```rb
 Periodoxical.generate(
@@ -292,7 +292,7 @@ Periodoxical.generate(
 ```
 
 ### Example 7 - Exclude time blocks using the `exclusion_dates` parameter
-As a Ruby dev, I want to generate slots for **8AM - 9AM** on **Mondays**, except for the **Monday of June 10, 2024**.
+As a Ruby dev, I want to generate timeblocks for **8AM - 9AM** on **Mondays**, except for the **Monday of June 10, 2024**.
 
 ```rb
 Periodoxical.generate(
@@ -324,6 +324,69 @@ Periodoxical.generate(
     {
       start: #<DateTime: 2024-07-01T08:00:00-0700>,
       end: #<DateTime: 2024-07-01T09:00:00-0700>,
+    }
+]
+```
+
+### Example 8 - Every-other-nth day-of-week rules (ie. every other Tuesday, every 3rd Wednesday, every 10th Friday)
+
+As a Ruby dev, I want to generate timeblocks for **9AM- 10AM** on **every Monday**, but **every other Tuesday**, and **every other 3rd Wednesday**. I can do this using the `days_of_week` parameter, but also using the `every` and `every_other_nth` keys to specify the every-other-nth-rules.
+
+```rb
+Periodoxical.generate(
+  time_zone: 'America/Los_Angeles',
+  start_date: '2024-12-30',
+  days_of_week: {
+    mon: { every: true }, # every Monday (no skipping)
+    tue: { every_other_nth: 2 }, # every other Tuesday starting at first Tuesday from start date
+    wed: { every_other_nth: 3 }, # every 3rd Wednesday starting at first Wednesday from start date
+  },
+  limit: 10,
+  time_blocks: [
+    { start_time: '9:00AM', end_time: '10:00AM' },
+  ],
+)
+#=> 
+[
+    {
+       start: #<DateTime: 2024-12-30T09:00:00-0800>,
+       end: #<DateTime: 2024-12-30T10:00:00-0800>,
+    },
+    {
+       start: #<DateTime: 2024-12-31T09:00:00-0800>,
+       end: #<DateTime: 2024-12-31T10:00:00-0800>,
+    },
+    {
+       start: #<DateTime: 2025-01-01T09:00:00-0800>,
+       end: #<DateTime: 2025-01-01T10:00:00-0800>,
+    },
+    {
+       start: #<DateTime: 2025-01-06T09:00:00-0800>,
+       end: #<DateTime: 2025-01-06T10:00:00-0800>,
+    },
+    {
+       start: #<DateTime: 2025-01-13T09:00:00-0800>,
+       end: #<DateTime: 2025-01-13T10:00:00-0800>,
+    },
+    {
+       start: #<DateTime: 2025-01-14T09:00:00-0800>,
+       end: #<DateTime: 2025-01-14T10:00:00-0800>,
+    },
+    {
+       start: #<DateTime: 2025-01-20T09:00:00-0800>,
+       end: #<DateTime: 2025-01-20T10:00:00-0800>,
+    },
+    {
+       start: #<DateTime: 2025-01-22T09:00:00-0800>,
+       end: #<DateTime: 2025-01-22T10:00:00-0800>,
+    },
+    {
+       start: #<DateTime: 2025-01-27T09:00:00-0800>,
+       end: #<DateTime: 2025-01-27T10:00:00-0800>,
+    },
+    {
+       start: #<DateTime: 2025-01-28T09:00:00-0800>,
+       end: #<DateTime: 2025-01-28T10:00:00-0800>,
     }
 ]
 ```

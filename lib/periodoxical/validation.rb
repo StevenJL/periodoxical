@@ -96,8 +96,8 @@ module Periodoxical
         end
       end
 
-      unless( @limit || @end_date)
-        raise "Either `limit` or `end_date` must be provided"
+      unless( @limit || @ending_at)
+        raise "Either `limit` or `ending_at` must be provided"
       end
 
       if @exclusion_times

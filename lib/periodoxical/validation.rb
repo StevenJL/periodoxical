@@ -99,6 +99,14 @@ module Periodoxical
       unless( @limit || @end_date)
         raise "Either `limit` or `end_date` must be provided"
       end
+
+      if @exclusion_times
+        @exclusion_times.each do |tb|
+          unless tb[:start] < tb[:end]
+            raise "Exclusion times must have `start` before `end`. #{tb[:start]} not before #{tb[:end]}"
+          end
+        end
+      end
     end
   end
 end

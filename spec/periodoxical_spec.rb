@@ -383,6 +383,71 @@ RSpec.describe Periodoxical do
       end
     end
 
+    context 'when exclusion_times is provided' do
+      subject do
+        Periodoxical.generate(
+          time_zone: 'America/Los_Angeles',
+          start_date: '2024-06-3',
+          limit: 6,
+          days_of_week: %w[mon],
+          time_blocks: [
+            { start_time: '8:00AM', end_time: '9:00AM' },
+            { start_time: '10:00AM', end_time: '11:00AM' }
+          ],
+          exclusion_times: [
+            {
+              start: '2024-06-10T10:30:00-07:00',
+              end: '2024-06-10T11:30:00-07:00'
+            }
+          ]
+        )
+      end
+
+      it 'generates correct timeblocks' do
+        time_blocks = subject
+        timezone = TZInfo::Timezone.get('America/Los_Angeles')
+        time_blocks_str = time_blocks.map do |time_block|
+          start_time = time_block[:start]
+          end_time = time_block[:end]
+          start_time_converted = timezone.utc_to_local(start_time.new_offset(0))
+          end_time_converted = timezone.utc_to_local(end_time.new_offset(0))
+          {
+            start: start_time_converted.strftime('%Y-%m-%d %H:%M:%S %z'),
+            end: end_time_converted.strftime('%Y-%m-%d %H:%M:%S %z'),
+          }
+        end
+
+        expect(time_blocks_str).to eq(
+          [
+            {
+              :start=>"2024-06-03 08:00:00 -0700",
+              :end=>"2024-06-03 09:00:00 -0700"
+            },
+            {
+              :start=>"2024-06-03 10:00:00 -0700",
+              :end=>"2024-06-03 11:00:00 -0700"
+            },
+            {
+              :start=>"2024-06-10 08:00:00 -0700",
+              :end=>"2024-06-10 09:00:00 -0700"
+            },
+            {
+              :start=>"2024-06-17 08:00:00 -0700",
+              :end=>"2024-06-17 09:00:00 -0700"
+            },
+            {
+              :start=>"2024-06-17 10:00:00 -0700",
+              :end=>"2024-06-17 11:00:00 -0700"
+            },
+            {
+              :start=>"2024-06-24 08:00:00 -0700",
+              :end=>"2024-06-24 09:00:00 -0700"
+            }
+          ]
+        )
+      end
+    end
+
     context 'when days_of_month is provided' do
       subject do
         Periodoxical.generate(
@@ -707,6 +772,114 @@ RSpec.describe Periodoxical do
             {:start=>"2032-11-25 17:00:00 -0800", :end=>"2032-11-25 18:00:00 -0800"},
             {:start=>"2033-11-24 17:00:00 -0800", :end=>"2033-11-24 18:00:00 -0800"}]
         )
+      end
+    end
+  end
+
+  describe '#overlap?' do
+    subject do
+      Periodoxical::Core.new(
+        start_date: '2024-06-04', time_blocks: [], limit: 4
+      ).send(:overlap?, time_block_1, time_block_2)
+    end
+
+    context 'when time_block_1 is before time_block_2 with no overlap' do
+      let(:time_block_1) do
+        {
+          start: DateTime.parse("2024-06-03T9:00:00"),
+          end: DateTime.parse("2024-06-03T10:00:00")
+        }
+      end
+
+      let(:time_block_2) do
+        {
+          start: DateTime.parse("2024-06-03T10:00:00"),
+          end: DateTime.parse("2024-06-03T12:00:00")
+        }
+      end
+
+      it 'returns false' do
+        expect(subject).to eq(false)
+      end
+    end
+
+    context 'when time_block_1 is after time_block_2 with no overlap' do
+      let(:time_block_1) do
+        {
+          start: DateTime.parse("2024-06-03T10:00:00"),
+          end: DateTime.parse("2024-06-03T12:00:00")
+        }
+      end
+
+      let(:time_block_2) do
+        {
+          start: DateTime.parse("2024-06-03T9:00:00"),
+          end: DateTime.parse("2024-06-03T10:00:00")
+        }
+      end
+
+      it 'returns false' do
+        expect(subject).to eq(false)
+      end
+    end
+
+    context 'when time_block_1 overlaps with time_block_2 case 1 ' do
+      let(:time_block_1) do
+        {
+          start: DateTime.parse("2024-06-03T9:00:00"),
+          end: DateTime.parse("2024-06-03T11:00:00")
+        }
+      end
+
+      let(:time_block_2) do
+        {
+          start: DateTime.parse("2024-06-03T10:00:00"),
+          end: DateTime.parse("2024-06-03T12:00:00")
+        }
+      end
+
+      it 'returns true' do
+        expect(subject).to eq(true)
+      end
+    end
+
+    context 'when time_block_1 overlaps with time_block_2 case 2 ' do
+      let(:time_block_2) do
+        {
+          start: DateTime.parse("2024-06-03T9:00:00"),
+          end: DateTime.parse("2024-06-03T11:00:00")
+        }
+      end
+
+      let(:time_block_1) do
+        {
+          start: DateTime.parse("2024-06-03T10:00:00"),
+          end: DateTime.parse("2024-06-03T12:00:00")
+        }
+      end
+
+      it 'returns true' do
+        expect(subject).to eq(true)
+      end
+    end
+
+    context 'when one is contained entirely within the other' do
+      let(:time_block_1) do
+        {
+          start: DateTime.parse("2024-06-03T10:00:00"),
+          end: DateTime.parse("2024-06-03T11:00:00")
+        }
+      end
+
+      let(:time_block_2) do
+        {
+          start: DateTime.parse("2024-06-03T9:00:00"),
+          end: DateTime.parse("2024-06-03T12:00:00")
+        }
+      end
+
+      it 'returns true' do
+        expect(subject).to eq(true)
       end
     end
   end

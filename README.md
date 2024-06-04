@@ -80,7 +80,8 @@ Periodoxical.generate(
   ending_at: DateTime.parse('2024-05-26T17:00:00-07:00'), # or an instance of DateTime
 )
 #=> [
-    # 2024-05-23 was skipped because the 9AM timeslot was before the `starting_from` of '2024-05-23T09:30:00-07:00'
+    # 2024-05-23 was skipped because the 9AM time block was before
+    # the `starting_from` of '2024-05-23T09:30:00-07:00'
     {
      start_time: #<DateTime: 2024-05-24T09:00:00-0700>,
      end_time: #<DateTime: 2024-05-24T10:30:00-0700>,

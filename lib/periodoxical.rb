@@ -17,8 +17,8 @@ module Periodoxical
     # @param [String] time_zone
     #   Ex: 'America/Los_Angeles', 'America/Chicago',
     #   TZInfo::DataTimezone#name from the tzinfo gem (https://github.com/tzinfo/tzinfo)
-    # @param [Date, String] start_date
-    # @param [Date, String] end_date
+    # @param [Date, String] starting_from
+    # @param [Date, String] ending_at
     # @param [Array<Hash>] time_blocks
     #   Ex: [
     #     {
@@ -40,7 +40,7 @@ module Periodoxical
     # @param [Array<Integer>, nil] months
     #   Months as integers, where 1 = Jan, 12 = Dec
     # @param [Integer] limit
-    #   How many date times to generate.  To be used when `end_date` is nil.
+    #   How many date times to generate.  To be used when `ending_at` is nil.
     # @param [Aray<String>] exclusion_dates
     #   Dates to be excluded when generating the time blocks
     #   Ex: ['2024-06-10', '2024-06-14']
@@ -65,8 +65,8 @@ module Periodoxical
     #     fri: { start_time: '7:00PM', end_time: '9:00PM' },
     #   }
     def initialize(
-      start_date:,
-      end_date: nil,
+      starting_from:,
+      ending_at: nil,
       time_blocks: nil,
       day_of_week_time_blocks: nil,
       limit: nil,
@@ -92,8 +92,8 @@ module Periodoxical
       @months = months
       @time_blocks = time_blocks
       @day_of_week_time_blocks = day_of_week_time_blocks
-      @start_date = start_date.is_a?(String) ? Date.parse(start_date) : start_date
-      @end_date = end_date.is_a?(String) ? Date.parse(end_date) : end_date
+      @starting_from = date_object_from(starting_from)
+      @ending_at = date_object_from(ending_at)
       @limit = limit
       @exclusion_dates = if exclusion_dates && !exclusion_dates.empty?
                            exclusion_dates.map { |ed| Date.parse(ed) }
@@ -174,7 +174,11 @@ module Periodoxical
     # Variables which manage flow of looping through time and generating slots
     def initialize_looping_variables!
       @output = []
-      @current_date = @start_date
+      if @starting_from.is_a?(DateTime)
+        @current_date = @starting_from.to_date
+      else
+        @current_date = @starting_from
+      end
       @current_day_of_week = day_of_week_long_to_short(@current_date.strftime("%A"))
       @current_count = 0
       @keep_generating = true
@@ -205,6 +209,7 @@ module Periodoxical
     def append_to_output_and_check_limit(time_block)
       # Check if this particular time is conflicts with any times from `exclusion_times`.
       return if overlaps_with_an_excluded_time?(time_block)
+      return if before_starting_from_or_after_ending_at?(time_block)
 
       @output << {
         start: time_str_to_object(@current_date, time_block[:start_time]),
@@ -224,7 +229,7 @@ module Periodoxical
 
       @current_day_of_week = day_of_week_long_to_short(@current_date.strftime("%A"))
 
-      if @end_date && (@current_date > @end_date)
+      if @ending_at && (@current_date > @ending_at)
         @keep_generating = false
       end
 
@@ -232,7 +237,7 @@ module Periodoxical
       # there is bug, or poorly specified rules.  If @current_date goes into
       # 1000 years in the future, but still no dates have been generated yet, this is
       # most likely an infinite loop situation, and needs to be killed.
-      if @limit && ((@current_date - @start_date).to_i > 365000) && @output.empty?
+      if @limit && ((@current_date - @starting_from).to_i > 365000) && @output.empty?
         raise "No end condition detected, causing infinite loop.  Please check rules/conditions or raise github issue for potential bug fixed"
       end
     end
@@ -324,8 +329,8 @@ module Periodoxical
       #       end_time: '10:30AM'
       #     },
       #   ],
-      #   start_date: '2024-05-23',
-      #   end_date: '2024-05-27',
+      #   starting_from: '2024-05-23',
+      #   ending_at: '2024-05-27',
       # )
       # where if we don't specify any date-of-week/month constraints, we return all consecutive dates.
       # In the future, if we don't support this case, we can use `false` as the return value.
@@ -374,6 +379,29 @@ module Periodoxical
     end
 
     # @return [Boolean]
+    #   Used only when `starting_from` and `ending_at` are instances of DateTime
+    #   instead of Date, requiring more precision, calculation.
+    def before_starting_from_or_after_ending_at?(time_block)
+      return false unless @starting_from.is_a?(DateTime) || @ending_at.is_a?(DateTime)
+
+      if @starting_from.is_a?(DateTime)
+        start_time = time_str_to_object(@current_date, time_block[:start_time])
+
+        # If the candidate time block is starting earlier than @starting_from, we want to skip it
+        return true if start_time < @starting_from
+      end
+
+      if @ending_at.is_a?(DateTime)
+        end_time = time_str_to_object(@current_date, time_block[:end_time])
+
+        # If the candidate time block is ending after @ending_at, we want to skip it
+        return true if end_time > @ending_at
+      end
+
+      false
+    end
+
+    # @return [Boolean]
     #   Whether or not the given `time_block` in the @current_date and
     #   @time_zone overlaps with the times in `exclusion_times`.
     def overlaps_with_an_excluded_time?(time_block)
@@ -409,6 +437,26 @@ module Periodoxical
       return true if tb_2_end > tb_1_start && tb_2_end < tb_1_end
 
       false
+    end
+
+    def date_object_from(dt)
+      return unless dt
+      return dt if dt.is_a?(Date) || dt.is_a?(DateTime)
+
+      if dt.is_a?(String)
+        return Date.parse(dt) if /\A\d{4}-(0?[1-9]|1[0-2])-(0?[1-9]|[12]\d|3[01])\z/ =~ dt
+
+        if /\A\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])T([01]\d|2[0-3]):[0-5]\d:[0-5]\d(\.\d+)?(Z|[+-][01]\d:[0-5]\d)?\z/ =~ dt
+          # convert to DateTime object
+          dt = DateTime.parse(dt)
+          # convert to given time_zone
+          return dt.to_time.localtime(@time_zone.utc_offset).to_datetime
+        end
+
+        raise "Could not parse date/datetime string #{dt}.  Please README for examples."
+      else
+        raise "Invalid argument: #{dt}"
+      end
     end
   end
 end

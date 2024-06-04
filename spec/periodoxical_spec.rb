@@ -2,6 +2,20 @@ require "pry"
 require "date"
 
 RSpec.describe Periodoxical do
+  def human_readable(time_blocks)
+    timezone = TZInfo::Timezone.get('America/Los_Angeles')
+    time_blocks_str = time_blocks.map do |time_block|
+      start_time = time_block[:start]
+      end_time = time_block[:end]
+      start_time_converted = timezone.utc_to_local(start_time.new_offset(0))
+      end_time_converted = timezone.utc_to_local(end_time.new_offset(0))
+      {
+        start: start_time_converted.strftime('%Y-%m-%d %H:%M:%S %z'),
+        end: end_time_converted.strftime('%Y-%m-%d %H:%M:%S %z'),
+      }
+    end
+  end
+
   it "has a version number" do
     expect(Periodoxical::VERSION).not_to be nil
   end
@@ -12,8 +26,8 @@ RSpec.describe Periodoxical do
         subject do
           Periodoxical.generate(
             time_zone: 'America/Los_Angeles',
-            start_date: '2024-05-23',
-            end_date: '2024-05-27',
+            starting_from: '2024-05-23',
+            ending_at: '2024-05-27',
           )
         end
 
@@ -33,28 +47,15 @@ RSpec.describe Periodoxical do
               end_time: '10:30AM'
             },
           ],
-          start_date: '2024-05-23',
-          end_date: '2024-05-27',
+          starting_from: '2024-05-23',
+          ending_at: '2024-05-27',
         )
       end
 
       it 'generates correct time blocks' do
-        subject
+        time_blocks = human_readable(subject)
 
-        time_blocks = subject
-        timezone = TZInfo::Timezone.get('America/Los_Angeles')
-        time_blocks_str = time_blocks.map do |time_block|
-          start_time = time_block[:start]
-          end_time = time_block[:end]
-          start_time_converted = timezone.utc_to_local(start_time.new_offset(0))
-          end_time_converted = timezone.utc_to_local(end_time.new_offset(0))
-          {
-            start: start_time_converted.strftime('%Y-%m-%d %H:%M:%S %z'),
-            end: end_time_converted.strftime('%Y-%m-%d %H:%M:%S %z'),
-          }
-        end
-
-        expect(time_blocks_str).to eq(
+        expect(time_blocks).to eq(
           [
             {
               :start=>"2024-05-23 09:00:00 -0700",
@@ -81,6 +82,43 @@ RSpec.describe Periodoxical do
       end
     end
 
+    context 'when iso8601 and DateTime time range is provided' do
+      subject do
+        Periodoxical.generate(
+          time_zone: 'America/Los_Angeles',
+          time_blocks: [
+            {
+              start_time: '9:00AM',
+              end_time: '10:30AM'
+            },
+          ],
+          starting_from: '2024-05-23T09:30:00-07:00',
+          ending_at: '2024-05-27T10:00:00-07:00',
+        )
+      end
+
+      it 'returns the correct time blocks' do
+        time_blocks = human_readable(subject)
+
+        expect(time_blocks).to eq(
+           [
+             {
+               :start=>"2024-05-24 09:00:00 -0700",
+               :end=>"2024-05-24 10:30:00 -0700"
+             },
+             {
+               :start=>"2024-05-25 09:00:00 -0700",
+               :end=>"2024-05-25 10:30:00 -0700"
+             },
+             {
+               :start=>"2024-05-26 09:00:00 -0700",
+               :end=>"2024-05-26 10:30:00 -0700"
+             }
+           ]
+        )
+      end
+    end
+
     context 'when using days_of_weeks and time_blocks' do
       subject do
         Periodoxical.generate(
@@ -96,25 +134,14 @@ RSpec.describe Periodoxical do
               end_time: '2:30PM'
             }
           ],
-          start_date: '2024-05-23',
-          end_date: '2024-06-12',
+          starting_from: '2024-05-23',
+          ending_at: '2024-06-12',
         )
       end
 
       it "generates all the times 9:00AM to 10:30PM, 2:00PM to 2:30PM on Mondays, Wednesdays, and Thursdays, between May 23, 2024 and June 12, 2024" do
-        time_blocks = subject
-        timezone = TZInfo::Timezone.get('America/Los_Angeles')
-        time_blocks_str = time_blocks.map do |time_block|
-          start_time = time_block[:start]
-          end_time = time_block[:end]
-          start_time_converted = timezone.utc_to_local(start_time.new_offset(0))
-          end_time_converted = timezone.utc_to_local(end_time.new_offset(0))
-          {
-            start: start_time_converted.strftime('%Y-%m-%d %H:%M:%S %z'),
-            end: end_time_converted.strftime('%Y-%m-%d %H:%M:%S %z'),
-          }
-        end
-        expect(time_blocks_str).to eq(
+        time_blocks = human_readable(subject)
+        expect(time_blocks).to eq(
           [
             {
               :start=>"2024-05-23 09:00:00 -0700",
@@ -208,25 +235,14 @@ RSpec.describe Periodoxical do
               end_time: '2:30PM'
             }
           ],
-          start_date: Date.parse('2024-05-23'),
+          starting_from: Date.parse('2024-05-23'),
           limit: 5
         )
       end
 
       it "generates 5 all the times 9:00AM to 10:30PM, 2:00PM to 2:30PM on Sundays" do
-        time_blocks = subject
-        timezone = TZInfo::Timezone.get('America/Los_Angeles')
-        time_blocks_str = time_blocks.map do |time_block|
-          start_time = time_block[:start]
-          end_time = time_block[:end]
-          start_time_converted = timezone.utc_to_local(start_time.new_offset(0))
-          end_time_converted = timezone.utc_to_local(end_time.new_offset(0))
-          {
-            start: start_time_converted.strftime('%Y-%m-%d %H:%M:%S %z'),
-            end: end_time_converted.strftime('%Y-%m-%d %H:%M:%S %z'),
-          }
-        end
-        expect(time_blocks_str).to eq(
+        time_blocks = human_readable(subject)
+        expect(time_blocks).to eq(
           [
             {
               :start=>"2024-05-26 09:00:00 -0700",
@@ -257,8 +273,8 @@ RSpec.describe Periodoxical do
       subject do
         Periodoxical.generate(
           time_zone: 'America/Los_Angeles',
-          start_date: Date.parse('2024-05-23'),
-          end_date: Date.parse('2024-06-12'),
+          starting_from: Date.parse('2024-05-23'),
+          ending_at: Date.parse('2024-06-12'),
           day_of_week_time_blocks: {
             mon: [
               { start_time: '8:00AM', end_time: '9:00AM' },
@@ -275,20 +291,9 @@ RSpec.describe Periodoxical do
       end
 
       it 'generates correct time blocks' do
-        time_blocks = subject
-        timezone = TZInfo::Timezone.get('America/Los_Angeles')
-        time_blocks_str = time_blocks.map do |time_block|
-          start_time = time_block[:start]
-          end_time = time_block[:end]
-          start_time_converted = timezone.utc_to_local(start_time.new_offset(0))
-          end_time_converted = timezone.utc_to_local(end_time.new_offset(0))
-          {
-            start: start_time_converted.strftime('%Y-%m-%d %H:%M:%S %z'),
-            end: end_time_converted.strftime('%Y-%m-%d %H:%M:%S %z'),
-          }
-        end
+        time_blocks = human_readable(subject)
 
-        expect(time_blocks_str).to eq(
+        expect(time_blocks).to eq(
           [
             {
               :start=>"2024-05-23 14:30:00 -0700",
@@ -347,7 +352,7 @@ RSpec.describe Periodoxical do
       subject do
         Periodoxical.generate(
           time_zone: 'America/Los_Angeles',
-          start_date: '2024-06-3',
+          starting_from: '2024-06-03',
           limit: 4,
           exclusion_dates: %w(2024-06-10),
           day_of_week_time_blocks: {
@@ -359,20 +364,9 @@ RSpec.describe Periodoxical do
       end
 
       it 'returns the correct dates' do
-        time_blocks = subject
-        timezone = TZInfo::Timezone.get('America/Los_Angeles')
-        time_blocks_str = time_blocks.map do |time_block|
-          start_time = time_block[:start]
-          end_time = time_block[:end]
-          start_time_converted = timezone.utc_to_local(start_time.new_offset(0))
-          end_time_converted = timezone.utc_to_local(end_time.new_offset(0))
-          {
-            start: start_time_converted.strftime('%Y-%m-%d %H:%M:%S %z'),
-            end: end_time_converted.strftime('%Y-%m-%d %H:%M:%S %z'),
-          }
-        end
+        time_blocks = human_readable(subject)
         # All 8AM - 9AM Monday except the Monday of June 10, 2024
-        expect(time_blocks_str).to eq(
+        expect(time_blocks).to eq(
           [
             {:start=>"2024-06-03 08:00:00 -0700", :end=>"2024-06-03 09:00:00 -0700"},
             {:start=>"2024-06-17 08:00:00 -0700", :end=>"2024-06-17 09:00:00 -0700"},
@@ -387,7 +381,7 @@ RSpec.describe Periodoxical do
       subject do
         Periodoxical.generate(
           time_zone: 'America/Los_Angeles',
-          start_date: '2024-06-3',
+          starting_from: '2024-06-3',
           limit: 6,
           days_of_week: %w[mon],
           time_blocks: [
@@ -404,20 +398,8 @@ RSpec.describe Periodoxical do
       end
 
       it 'generates correct timeblocks' do
-        time_blocks = subject
-        timezone = TZInfo::Timezone.get('America/Los_Angeles')
-        time_blocks_str = time_blocks.map do |time_block|
-          start_time = time_block[:start]
-          end_time = time_block[:end]
-          start_time_converted = timezone.utc_to_local(start_time.new_offset(0))
-          end_time_converted = timezone.utc_to_local(end_time.new_offset(0))
-          {
-            start: start_time_converted.strftime('%Y-%m-%d %H:%M:%S %z'),
-            end: end_time_converted.strftime('%Y-%m-%d %H:%M:%S %z'),
-          }
-        end
-
-        expect(time_blocks_str).to eq(
+        time_blocks = human_readable(subject)
+        expect(time_blocks).to eq(
           [
             {
               :start=>"2024-06-03 08:00:00 -0700",
@@ -452,7 +434,7 @@ RSpec.describe Periodoxical do
       subject do
         Periodoxical.generate(
           time_zone: 'America/Los_Angeles',
-          start_date: '2024-06-3',
+          starting_from: '2024-06-3',
           limit: 4,
           days_of_month: [5, 10],
           time_blocks: [
@@ -462,20 +444,8 @@ RSpec.describe Periodoxical do
       end
 
       it 'generates the correct days' do
-        time_blocks = subject
-        timezone = TZInfo::Timezone.get('America/Los_Angeles')
-        time_blocks_str = time_blocks.map do |time_block|
-          start_time = time_block[:start]
-          end_time = time_block[:end]
-          start_time_converted = timezone.utc_to_local(start_time.new_offset(0))
-          end_time_converted = timezone.utc_to_local(end_time.new_offset(0))
-          {
-            start: start_time_converted.strftime('%Y-%m-%d %H:%M:%S %z'),
-            end: end_time_converted.strftime('%Y-%m-%d %H:%M:%S %z'),
-          }
-        end
-
-        expect(time_blocks_str).to eq(
+        time_blocks = human_readable(subject)
+        expect(time_blocks).to eq(
           [
             {
               :start=>"2024-06-05 08:00:00 -0700",
@@ -502,7 +472,7 @@ RSpec.describe Periodoxical do
       subject do
         Periodoxical.generate(
           time_zone: 'America/Los_Angeles',
-          start_date: '2024-04-1',
+          starting_from: '2024-04-1',
           limit: 5,
           weeks_of_month: [1, 2],
           months: [4, 5, 6],
@@ -514,20 +484,9 @@ RSpec.describe Periodoxical do
       end
 
       it 'generates the right timeblocks' do
-        time_blocks = subject
-        timezone = TZInfo::Timezone.get('America/Los_Angeles')
-        time_blocks_str = time_blocks.map do |time_block|
-          start_time = time_block[:start]
-          end_time = time_block[:end]
-          start_time_converted = timezone.utc_to_local(start_time.new_offset(0))
-          end_time_converted = timezone.utc_to_local(end_time.new_offset(0))
-          {
-            start: start_time_converted.strftime('%Y-%m-%d %H:%M:%S %z'),
-            end: end_time_converted.strftime('%Y-%m-%d %H:%M:%S %z'),
-          }
-        end
+        time_blocks = human_readable(subject)
 
-        expect(time_blocks_str).to eq(
+        expect(time_blocks).to eq(
           [
             {
               :start=>"2024-04-01 08:00:00 -0700",
@@ -558,7 +517,7 @@ RSpec.describe Periodoxical do
       subject do
         Periodoxical.generate(
           time_zone: 'America/Los_Angeles',
-          start_date: '2024-06-01',
+          starting_from: '2024-06-01',
           limit: 5,
           nth_day_of_week_in_month: {
             mon: [1, 2],
@@ -571,20 +530,8 @@ RSpec.describe Periodoxical do
       end
 
       it 'generates the right time blocks' do
-        time_blocks = subject
-        timezone = TZInfo::Timezone.get('America/Los_Angeles')
-        time_blocks_str = time_blocks.map do |time_block|
-          start_time = time_block[:start]
-          end_time = time_block[:end]
-          start_time_converted = timezone.utc_to_local(start_time.new_offset(0))
-          end_time_converted = timezone.utc_to_local(end_time.new_offset(0))
-          {
-            start: start_time_converted.strftime('%Y-%m-%d %H:%M:%S %z'),
-            end: end_time_converted.strftime('%Y-%m-%d %H:%M:%S %z'),
-          }
-        end
-
-        expect(time_blocks_str).to eq(
+        time_blocks = human_readable(subject)
+        expect(time_blocks).to eq(
           [
             {:start=>"2024-06-03 08:00:00 -0700", :end=>"2024-06-03 09:00:00 -0700"},
             {:start=>"2024-06-10 08:00:00 -0700", :end=>"2024-06-10 09:00:00 -0700"},
@@ -600,7 +547,7 @@ RSpec.describe Periodoxical do
       subject do
         Periodoxical.generate(
           time_zone: 'America/Los_Angeles',
-          start_date: '2024-12-30',
+          starting_from: '2024-12-30',
           days_of_week: {
             mon: { every: true }, # every Monday
             tue: { every_other_nth: 2 }, # every other Tuesday
@@ -614,20 +561,9 @@ RSpec.describe Periodoxical do
       end
 
       it 'generates the correct timeblocks' do
-        time_blocks = subject
-        timezone = TZInfo::Timezone.get('America/Los_Angeles')
-        time_blocks_str = time_blocks.map do |time_block|
-          start_time = time_block[:start]
-          end_time = time_block[:end]
-          start_time_converted = timezone.utc_to_local(start_time.new_offset(0))
-          end_time_converted = timezone.utc_to_local(end_time.new_offset(0))
-          {
-            start: start_time_converted.strftime('%Y-%m-%d %H:%M:%S %z'),
-            end: end_time_converted.strftime('%Y-%m-%d %H:%M:%S %z'),
-          }
-        end
+        time_blocks = human_readable(subject)
 
-        expect(time_blocks_str).to eq(
+        expect(time_blocks).to eq(
           [
             {
               :start=>"2024-12-30 09:00:00 -0800",
@@ -678,7 +614,7 @@ RSpec.describe Periodoxical do
       subject do
         Periodoxical.generate(
           time_zone: 'America/Los_Angeles',
-          start_date: '1980-05-01',
+          starting_from: '1980-05-01',
           days_of_week: %w(fri),
           days_of_month: [13],
           limit: 10,
@@ -689,20 +625,8 @@ RSpec.describe Periodoxical do
       end
 
       it 'generates the correct time slots' do
-        time_blocks = subject
-        timezone = TZInfo::Timezone.get('America/Los_Angeles')
-        time_blocks_str = time_blocks.map do |time_block|
-          start_time = time_block[:start]
-          end_time = time_block[:end]
-          start_time_converted = timezone.utc_to_local(start_time.new_offset(0))
-          end_time_converted = timezone.utc_to_local(end_time.new_offset(0))
-          {
-            start: start_time_converted.strftime('%Y-%m-%d %H:%M:%S %z'),
-            end: end_time_converted.strftime('%Y-%m-%d %H:%M:%S %z'),
-          }
-        end
-
-        expect(time_blocks_str).to eq(
+        time_blocks = human_readable(subject)
+        expect(time_blocks).to eq(
           [
             {:start=>"1980-06-13 23:00:00 -0700",
             :end=>"1980-06-13 00:00:00 -0700"},
@@ -733,7 +657,7 @@ RSpec.describe Periodoxical do
       subject do
         Periodoxical.generate(
           time_zone: 'America/Los_Angeles',
-          start_date: '2024-05-01',
+          starting_from: '2024-05-01',
           months: [11],
           nth_day_of_week_in_month: {
             thu: [4],
@@ -746,20 +670,9 @@ RSpec.describe Periodoxical do
       end
 
       it 'generates the correct time slots' do
-        time_blocks = subject
-        timezone = TZInfo::Timezone.get('America/Los_Angeles')
-        time_blocks_str = time_blocks.map do |time_block|
-          start_time = time_block[:start]
-          end_time = time_block[:end]
-          start_time_converted = timezone.utc_to_local(start_time.new_offset(0))
-          end_time_converted = timezone.utc_to_local(end_time.new_offset(0))
-          {
-            start: start_time_converted.strftime('%Y-%m-%d %H:%M:%S %z'),
-            end: end_time_converted.strftime('%Y-%m-%d %H:%M:%S %z'),
-          }
-        end
+        time_blocks = human_readable(subject)
 
-        expect(time_blocks_str).to eq(
+        expect(time_blocks).to eq(
           [
             {:start=>"2024-11-28 17:00:00 -0800", :end=>"2024-11-28 18:00:00 -0800"},
             {:start=>"2025-11-27 17:00:00 -0800", :end=>"2025-11-27 18:00:00 -0800"},
@@ -779,7 +692,7 @@ RSpec.describe Periodoxical do
   describe '#overlap?' do
     subject do
       Periodoxical::Core.new(
-        start_date: '2024-06-04', time_blocks: [], limit: 4
+        starting_from: '2024-06-04', time_blocks: [], limit: 4
       ).send(:overlap?, time_block_1, time_block_2)
     end
 

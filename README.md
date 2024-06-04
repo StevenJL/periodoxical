@@ -41,8 +41,8 @@ Periodoxical.generate(
       end_time: '10:30AM'
     },
   ],
-  start_date: '2024-05-23',
-  end_date: '2024-05-27',
+  starting_from: '2024-05-23',
+  ending_at: '2024-05-26',
 )
 #=> 
 [
@@ -62,6 +62,30 @@ Periodoxical.generate(
      start_time: #<DateTime: 2024-05-26T09:00:00-0700>,
      end_time: #<DateTime: 2024-05-26T10:30:00-0700>,
     }
+]
+```
+
+The `starting_from` and `ending_at` params can also accept datetimes in ISO 8601 format for more precision. This example generate all the datetime blocks of **9:00AM - 10:30AM** but starting from **May 23, 2024 at 9:30AM**.
+
+```rb
+Periodoxical.generate(
+  time_zone: 'America/Los_Angeles',
+  time_blocks: [
+    {
+      start_time: '9:00AM',
+      end_time: '10:30AM'
+    },
+  ],
+  starting_from: '2024-05-23T09:30:00-07:00', # can be string in iso8601 format
+  ending_at: DateTime.parse('2024-05-26T17:00:00-07:00'), # or an instance of DateTime
+)
+#=> [
+    # 2024-05-23 was skipped because the 9AM timeslot was before the `starting_from` of '2024-05-23T09:30:00-07:00'
+    {
+     start_time: #<DateTime: 2024-05-24T09:00:00-0700>,
+     end_time: #<DateTime: 2024-05-24T10:30:00-0700>,
+    },
+    ...
 ]
 ```
 
@@ -89,8 +113,8 @@ Periodoxical.generate(
       end_time: '2:30PM'
     }
   ],
-  start_date: '2024-05-23',
-  end_date: '2024-06-12',
+  starting_from: '2024-05-23',
+  ending_at: '2024-06-12',
 )
 # returns an array of hashes, each with :start and :end keys
 #=> 
@@ -133,7 +157,7 @@ Periodoxical.generate(
       end_time: '2:30PM'
     }
   ],
-  start_date: Date.parse('2024-05-23'), # Can also pass in `Date` object.
+  starting_from: Date.parse('2024-05-23'), # Can also pass in `Date` object.
   limit: 3
 )
 # =>
@@ -167,8 +191,8 @@ As a ruby dev, I want to generate all the timeblocks between **May 23, 2024** an
 ```rb
 Periodoxical.generate(
   time_zone: 'America/Los_Angeles',
-  start_date: Date.parse('2024-05-23'), # can also pass in Date objects
-  end_date: Date.parse('2024-06-12'), # can also pass in Date objects,
+  starting_from: Date.parse('2024-05-23'), # can also pass in Date objects
+  ending_at: Date.parse('2024-06-12'), # can also pass in Date objects,
   day_of_week_time_blocks: {
     mon: [
       { start_time: '8:00AM', end_time: '9:00AM' },
@@ -191,7 +215,7 @@ As a Ruby dev, I want to generate the next 3 timeblocks for **8AM - 9AM** for th
 ```rb
 Periodoxical.generate(
   time_zone: 'America/Los_Angeles',
-  start_date: '2024-06-1',
+  starting_from: '2024-06-01',
   limit: 3,
   days_of_month: [5, 10],
   time_blocks: [
@@ -220,7 +244,7 @@ As a Ruby dev, I want to generate **4** timeblocks for **8AM - 9AM** on **Monday
 ```
 Periodoxical.generate(
   time_zone: 'America/Los_Angeles',
-  start_date: '2024-04-1',
+  starting_from: '2024-04-01',
   limit: 4,
   weeks_of_month: [1 2],
   months: [4, 5, 6],
@@ -256,7 +280,7 @@ As a Ruby dev, I want to generate timeblocks for **8AM - 9AM** on the **first an
 ```rb
 Periodoxical.generate(
   time_zone: 'America/Los_Angeles',
-  start_date: '2024-06-01',
+  starting_from: '2024-06-01',
   limit: 5,
   nth_day_of_week_in_month: {
     mon: [1, 2], # valid values: -1,1,2,3,4,5
@@ -297,7 +321,7 @@ As a Ruby dev, I want to generate timeblocks for **8AM - 9AM** on **Mondays**, e
 ```rb
 Periodoxical.generate(
   time_zone: 'America/Los_Angeles',
-  start_date: '2024-06-3',
+  starting_from: '2024-06-03',
   limit: 4,
   exclusion_dates: %w(2024-06-10),
   day_of_week_time_blocks: {
@@ -333,7 +357,7 @@ As a Ruby dev, I want to generate timeblocks for **8AM - 9AM**, and **10AM - 11A
 ```rb
 Periodoxical.generate(
   time_zone: 'America/Los_Angeles',
-  start_date: '2024-06-3',
+  starting_from: '2024-06-03',
   limit: 4,
   days_of_week: %(mon),
   time_blocks: [
@@ -393,11 +417,11 @@ This can be visualized as:
 ```rb
 Periodoxical.generate(
   time_zone: 'America/Los_Angeles',
-  start_date: '2024-12-30',
+  starting_from: '2024-12-30',
   days_of_week: {
     mon: { every: true }, # every Monday (no skipping)
-    tue: { every_other_nth: 2 }, # every other Tuesday starting at first Tuesday from start date
-    wed: { every_other_nth: 3 }, # every 3rd Wednesday starting at first Wednesday from start date
+    tue: { every_other_nth: 2 }, # every other Tuesday starting at first Tuesday from `starting_from` date
+    wed: { every_other_nth: 3 }, # every 3rd Wednesday starting at first Wednesday from `starting_from` date
   },
   limit: 10,
   time_blocks: [
@@ -456,7 +480,7 @@ Generate all the Friday the 13ths ever since May 1980 (when the first Friday the
 ```rb
 Periodoxical.generate(
   time_zone: 'America/Los_Angeles',
-  start_date: '1980-05-01',
+  starting_from: '1980-05-01',
   days_of_week: %w(fri),
   days_of_month: [13],
   limit: 100,
@@ -491,7 +515,7 @@ Generate the next 10 Thanksgivings from now on (Thanksgivings is defined as the 
 ```rb
 Periodoxical.generate(
   time_zone: 'America/Los_Angeles',
-  start_date: '2024-05-01',
+  starting_from: '2024-05-01',
   months: [11],
   nth_day_of_week_in_month: {
     thu: [4],

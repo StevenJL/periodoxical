@@ -29,7 +29,7 @@ Or install it yourself as:
 
 ## Usage
 
-### Example 1
+### Basic Example
 As a Ruby dev, I want to generate all the datetime blocks of **9:00AM - 10:30AM** for all days from **May 23, 2024** to **May 26, 2024** inclusive.
 
 ```rb
@@ -65,7 +65,7 @@ Periodoxical.generate(
 ]
 ```
 
-The `starting_from` and `ending_at` params can also accept datetimes in ISO 8601 format for more precision. This example generate all the datetime blocks of **9:00AM - 10:30AM** but starting from **May 23, 2024 at 9:30AM**.
+The `starting_from` and `ending_at` params can also accept datetimes in ISO 8601 format. This example generate all the datetime blocks of **9:00AM - 10:30AM** but starting from **May 23, 2024 at 9:30AM**.
 
 ```rb
 Periodoxical.generate(
@@ -90,8 +90,8 @@ Periodoxical.generate(
 ]
 ```
 
-### Example 2 - specify days of the week
-As a Ruby dev, I want to generate all the datetime blocks of **9:00AM - 10:30AM** and **2:00PM - 2:30PM**, on **Mondays**, **Wednesdays**, and **Thursdays**, between the dates of **May 23, 2024** and **June 12, 2024**, inclusive. This can be represented visually as:
+### Specify days of the week
+As a Ruby dev, I want to generate all the datetime blocks of **9:00AM - 10:30AM** and **2:00PM - 2:30PM**, on **Mondays**, **Wednesdays**, and **Thursdays**, between the dates of **May 23, 2024** and **June 12, 2024**, inclusive. I can do this using the `days_of_week` parameter. This can be represented visually as:
 
 <div align="center">
   <img width="558" alt="calendar_image_1" src="https://github.com/StevenJL/periodoxical/assets/2191808/e92fc6ff-03fd-44ed-a955-d3a0dd0f5d0a">
@@ -140,9 +140,9 @@ Periodoxical.generate(
 ]
 ```
 
-### Example 3 - using the `limit` key.
+### Example using the `limit` parameter.
 
-As a ruby dev, I want to generate the next **3** datetime blocks of **9:00AM - 10:30AM** and **2:00PM - 2:30PM** on **Sundays**, after **May 23, 2024** using the `limit` key.
+As a ruby dev, I want to generate the next **3** datetime blocks of **9:00AM - 10:30AM** and **2:00PM - 2:30PM** on **Sundays**, after **May 23, 2024**. I can do this using the `limit` parameter, instead of `ending_at`.
 
 ```rb
 Periodoxical.generate(
@@ -178,9 +178,9 @@ Periodoxical.generate(
 ]
 ```
 
-### Example 4 - when time blocks vary between days
+### Time blocks that vary between days-of-the-week
 
-As a ruby dev, I want to generate all the timeblocks between **May 23, 2024** and **June 12, 2024** where the time should be **8AM-9AM** on **Mondays**, but **10:45AM-12:00PM** and **2:00PM-4:00PM** on **Wednesdays**, and **2:30PM-4:15PM** on **Thursdays**.
+As a ruby dev, I want to generate all the timeblocks between **May 23, 2024** and **June 12, 2024** where the time should be **8AM-9AM** on **Mondays**, but **10:45AM-12:00PM** and **2:00PM-4:00PM** on **Wednesdays**, and **2:30PM-4:15PM** on **Thursdays**.  I can do this using the `day_of_week_time_blocks` parameter.
 
 <div align="center">
   <img width="628" alt="calendar_image_2" src="https://github.com/StevenJL/periodoxical/assets/2191808/26d14824-08ff-481a-97e2-9b6b11beea29">
@@ -209,9 +209,9 @@ Periodoxical.generate(
 )
 ```
 
-### Example 5 - when specifying time blocks using day-of-month and/or week-of-month and/or month.
+### Specifying time blocks using rules for day-of-month and/or week-of-month and/or month.
 
-As a Ruby dev, I want to generate the next 3 timeblocks for **8AM - 9AM** for the **5th** and **10th** day of every month starting from **June**
+As a Ruby dev, I want to generate the next 3 timeblocks for **8AM - 9AM** for the **5th** and **10th** day of every month starting from **June**.  I can do this using the `days_of_month` parameter.
 
 ```rb
 Periodoxical.generate(
@@ -240,7 +240,7 @@ Periodoxical.generate(
 ]
 ```
 
-As a Ruby dev, I want to generate **4** timeblocks for **8AM - 9AM** on **Mondays** but only in the **first two weeks** in the months of **April, May, and June**
+As a Ruby dev, I want to generate **4** timeblocks for **8AM - 9AM** on **Mondays** but only in the **first two weeks** in the months of **April, May, and June**.  I can do this using the `months` parameter.
 
 ```
 Periodoxical.generate(
@@ -285,7 +285,7 @@ Periodoxical.generate(
   limit: 5,
   nth_day_of_week_in_month: {
     mon: [1, 2], # valid values: -1,1,2,3,4,5
-    fri: [-1], # Use -1 to specify "last" of the month.
+    fri: [-1], # Use -1 to specify the last Friday of the month.
   },
   time_blocks: [
     { start_time: '8:00AM', end_time: '9:00AM' },
@@ -317,7 +317,7 @@ Periodoxical.generate(
 ```
 
 ### Example 7 - Exclude time blocks using the `exclusion_dates` and `exclusion_times` parameters
-As a Ruby dev, I want to generate timeblocks for **8AM - 9AM** on **Mondays**, except for the **Monday of June 10, 2024**.
+As a Ruby dev, I want to generate timeblocks for **8AM - 9AM** on **Mondays**, except for the **Monday of June 10, 2024**.  I can do this using the `exlcusion_dates` parameter.
 
 ```rb
 Periodoxical.generate(
@@ -404,7 +404,7 @@ Periodoxical.generate(
 
 ### Example 8 - Every-other-nth day-of-week rules (ie. every other Tuesday, every 3rd Wednesday, every 10th Friday)
 
-As a Ruby dev, I want to generate timeblocks for **9AM- 10AM** on **every Monday**, but **every other Tuesday**, and **every other 3rd Wednesday**. I can do this using the `days_of_week` parameter, but also using the `every` and `every_other_nth` keys to specify the every-other-nth-rules.
+As a Ruby dev, I want to generate timeblocks for **9AM- 10AM** on **every Monday**, but **every other Tuesday**, and **every other 3rd Wednesday**. I can do this using the `days_of_week` parameter with the `every` and `every_other_nth` keys to specify the every-other-nth-rules.
 
 This can be visualized as:
 

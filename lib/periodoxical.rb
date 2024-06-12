@@ -1,5 +1,6 @@
 require "periodoxical/version"
 require "periodoxical/validation"
+require "periodoxical/helpers"
 require "date"
 require "time"
 require "tzinfo"
@@ -14,6 +15,7 @@ module Periodoxical
 
   class Core
     include Periodoxical::Validation
+    include Periodoxical::Helpers
     # @param [String] time_zone
     #   Ex: 'America/Los_Angeles', 'America/Chicago',
     #   TZInfo::DataTimezone#name from the tzinfo gem (https://github.com/tzinfo/tzinfo)
@@ -82,16 +84,16 @@ module Periodoxical
 
       @time_zone = TZInfo::Timezone.get(time_zone)
       if days_of_week.is_a?(Array)
-        @days_of_week = days_of_week
+        @days_of_week = deep_symbolize_keys(days_of_week)
       elsif days_of_week.is_a?(Hash)
-        @days_of_week_with_alternations = days_of_week
+        @days_of_week_with_alternations = deep_symbolize_keys(days_of_week)
       end
-      @nth_day_of_week_in_month = nth_day_of_week_in_month
+      @nth_day_of_week_in_month = deep_symbolize_keys(nth_day_of_week_in_month)
       @days_of_month = days_of_month
       @weeks_of_month = weeks_of_month
       @months = months
-      @time_blocks = time_blocks
-      @day_of_week_time_blocks = day_of_week_time_blocks
+      @time_blocks = deep_symbolize_keys(time_blocks)
+      @day_of_week_time_blocks = deep_symbolize_keys(day_of_week_time_blocks)
       @starting_from = date_object_from(starting_from)
       @ending_at = date_object_from(ending_at)
       @limit = limit
@@ -99,7 +101,7 @@ module Periodoxical
                            exclusion_dates.map { |ed| Date.parse(ed) }
                          end
       @exclusion_times = if exclusion_times
-                           exclusion_times.map do |et|
+                           deep_symbolize_keys(exclusion_times).map do |et|
                              { start: DateTime.parse(et[:start]), end: DateTime.parse(et[:end]) }
                            end
                          end
@@ -129,18 +131,6 @@ module Periodoxical
     end
 
     private
-
-    def day_of_week_long_to_short(dow)
-      {
-        "Monday" => "mon",
-        "Tuesday" => "tue",
-        "Wednesday" => "wed",
-        "Thursday" => "thu",
-        "Friday" => "fri",
-        "Saturday" => "sat",
-        "Sunday" => "sun",
-      }[dow]
-    end
 
     # @param [String] time_str
     #   Ex: '9:00AM'
@@ -418,45 +408,6 @@ module Periodoxical
       end
 
       false
-    end
-
-    # @param [Hash] time_block_1, time_block_2
-    #  Ex: {
-    #    start: #<DateTime>,
-    #    end: #<DateTime>,
-    #  }
-    def overlap?(time_block_1, time_block_2)
-      tb_1_start = time_block_1[:start]
-      tb_1_end = time_block_1[:end]
-      tb_2_start = time_block_2[:start]
-      tb_2_end = time_block_2[:end]
-
-      # Basicall overlap is when one starts before the other has ended
-      return true if tb_1_end > tb_2_start && tb_1_end < tb_2_end
-      # By symmetry
-      return true if tb_2_end > tb_1_start && tb_2_end < tb_1_end
-
-      false
-    end
-
-    def date_object_from(dt)
-      return unless dt
-      return dt if dt.is_a?(Date) || dt.is_a?(DateTime)
-
-      if dt.is_a?(String)
-        return Date.parse(dt) if /\A\d{4}-(0?[1-9]|1[0-2])-(0?[1-9]|[12]\d|3[01])\z/ =~ dt
-
-        if /\A\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])T([01]\d|2[0-3]):[0-5]\d:[0-5]\d(\.\d+)?(Z|[+-][01]\d:[0-5]\d)?\z/ =~ dt
-          # convert to DateTime object
-          dt = DateTime.parse(dt)
-          # convert to given time_zone
-          return dt.to_time.localtime(@time_zone.utc_offset).to_datetime
-        end
-
-        raise "Could not parse date/datetime string #{dt}.  Please README for examples."
-      else
-        raise "Invalid argument: #{dt}"
-      end
     end
   end
 end

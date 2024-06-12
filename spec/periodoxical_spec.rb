@@ -346,6 +346,85 @@ RSpec.describe Periodoxical do
           ]
         )
       end
+
+      context 'when day_of_week_time_blocks parameter has string keys' do
+        subject do
+          Periodoxical.generate(
+            time_zone: 'America/Los_Angeles',
+            starting_from: Date.parse('2024-05-23'),
+            ending_at: Date.parse('2024-06-12'),
+            day_of_week_time_blocks: {
+              'mon' => [
+                { 'start_time' => '8:00AM', 'end_time' => '9:00AM' },
+              ],
+              'wed' => [
+                { 'start_time' => '10:45AM', 'end_time' => '12:00PM' },
+                { 'start_time' => '2:00PM', 'end_time' => '4:00PM' },
+              ],
+              'thu' => [
+                { 'start_time' => '2:30PM', 'end_time' => '4:15PM' }
+              ],
+            }
+          )
+        end
+
+        it 'generates correct time blocks' do
+          time_blocks = human_readable(subject)
+
+          expect(time_blocks).to eq(
+            [
+              {
+                :start=>"2024-05-23 14:30:00 -0700",
+                :end=>"2024-05-23 16:15:00 -0700"
+              },
+              {
+                :start=>"2024-05-27 08:00:00 -0700",
+                :end=>"2024-05-27 09:00:00 -0700"
+              },
+              {
+                :start=>"2024-05-29 10:45:00 -0700",
+                :end=>"2024-05-29 12:00:00 -0700"
+              },
+              {
+                :start=>"2024-05-29 14:00:00 -0700",
+                :end=>"2024-05-29 16:00:00 -0700"
+              },
+              {
+                :start=>"2024-05-30 14:30:00 -0700",
+                :end=>"2024-05-30 16:15:00 -0700"
+              },
+              {
+                :start=>"2024-06-03 08:00:00 -0700",
+                :end=>"2024-06-03 09:00:00 -0700"
+              },
+              {
+                :start=>"2024-06-05 10:45:00 -0700",
+                :end=>"2024-06-05 12:00:00 -0700"
+              },
+              {
+                :start=>"2024-06-05 14:00:00 -0700",
+                :end=>"2024-06-05 16:00:00 -0700"
+              },
+              {
+                :start=>"2024-06-06 14:30:00 -0700",
+                :end=>"2024-06-06 16:15:00 -0700"
+              },
+              {
+                :start=>"2024-06-10 08:00:00 -0700",
+                :end=>"2024-06-10 09:00:00 -0700"
+              },
+              {
+                :start=>"2024-06-12 10:45:00 -0700",
+                :end=>"2024-06-12 12:00:00 -0700"
+              },
+              {
+                :start=>"2024-06-12 14:00:00 -0700",
+                :end=>"2024-06-12 16:00:00 -0700"
+              }
+            ]
+          )
+        end
+      end
     end
 
     context 'when exclusion_dates is provided' do

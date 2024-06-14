@@ -275,7 +275,7 @@ Periodoxical.generate(
 ]
 ```
 
-### Example 6 - Specify nth day-of-week in month (ie. first Monday of the Month, second Tuesday of the Month, last Friday of Month)
+### Specify nth day-of-week in month (ie. first Monday of the Month, second Tuesday of the Month, last Friday of Month)
 As a Ruby dev, I want to generate timeblocks for **8AM - 9AM** on the **first and second Mondays**  and **last Fridays** of every month starting in June 2024.  I can do this with the `nth_day_of_week_in_month` param.
 
 ```rb
@@ -316,7 +316,7 @@ Periodoxical.generate(
 ]
 ```
 
-### Example 7 - Exclude time blocks using the `exclusion_dates` and `exclusion_times` parameters
+### Exclude time blocks using the `exclusion_dates` and `exclusion_times` parameters
 As a Ruby dev, I want to generate timeblocks for **8AM - 9AM** on **Mondays**, except for the **Monday of June 10, 2024**.  I can do this using the `exlcusion_dates` parameter.
 
 ```rb
@@ -402,7 +402,7 @@ Periodoxical.generate(
 ]
 ```
 
-### Example 8 - Every-other-nth day-of-week rules (ie. every other Tuesday, every 3rd Wednesday, every 10th Friday)
+### Every-other-nth day-of-week rules (ie. every other Tuesday, every 3rd Wednesday, every 10th Friday)
 
 As a Ruby dev, I want to generate timeblocks for **9AM- 10AM** on **every Monday**, but **every other Tuesday**, and **every other 3rd Wednesday**. I can do this using the `days_of_week` parameter with the `every` and `every_other_nth` keys to specify the every-other-nth-rules.
 

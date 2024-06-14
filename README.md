@@ -47,20 +47,20 @@ Periodoxical.generate(
 #=> 
 [
     {
-     start_time: #<DateTime: 2024-05-23T09:00:00-0700>,
-     end_time: #<DateTime: 2024-05-23T10:30:00-0700>,
+     start: #<DateTime: 2024-05-23T09:00:00-0700>,
+     end: #<DateTime: 2024-05-23T10:30:00-0700>,
     },
     {
-     start_time: #<DateTime: 2024-05-24T09:00:00-0700>,
-     end_time: #<DateTime: 2024-05-24T10:30:00-0700>,
+     start: #<DateTime: 2024-05-24T09:00:00-0700>,
+     end: #<DateTime: 2024-05-24T10:30:00-0700>,
     },
     {
-     start_time: #<DateTime: 2024-05-25T09:00:00-0700>,
-     end_time: #<DateTime: 2024-05-25T10:30:00-0700>,
+     start: #<DateTime: 2024-05-25T09:00:00-0700>,
+     end: #<DateTime: 2024-05-25T10:30:00-0700>,
     },
     {
-     start_time: #<DateTime: 2024-05-26T09:00:00-0700>,
-     end_time: #<DateTime: 2024-05-26T10:30:00-0700>,
+     start: #<DateTime: 2024-05-26T09:00:00-0700>,
+     end: #<DateTime: 2024-05-26T10:30:00-0700>,
     }
 ]
 ```
@@ -470,6 +470,50 @@ Periodoxical.generate(
     {
        start: #<DateTime: 2025-01-28T09:00:00-0800>,
        end: #<DateTime: 2025-01-28T10:00:00-0800>,
+    }
+]
+```
+
+### Use the `duration` key, to automatically partition the provided `time_blocks` into smaller chunks to the given duration.
+
+As a Ruby dev, I want to generate **30 minute** time blocks between **9:00AM - 1:00PM, and 2:00PM - 5:00PM**.  Because it is too tedious to generate all 14 of these time blocks, I prefer to pass in the `duration` key and have `periodoxical` generate them for me.
+
+N.B. If you provide a duration that conflicts with your time blocks, `periodoxical` will not return any time blocks.  For example, if you specify **9:00AM - 10:00AM** but set your **duration** as  90 minutes, no time blocks are generated since we can't fit 90 minutes into an hour!
+
+
+```rb
+Periodoxical.generate(
+  time_zone: 'America/Los_Angeles',
+  time_blocks: [
+    {
+      start_time: '9:00AM',
+      end_time: '1:00PM'
+    },
+    {
+      start_time: '2:00PM',
+      end_time: '5:00PM'
+    },
+  ],
+  duration: 30, #(minutes)
+  starting_from: '2024-05-23',
+  ending_at: '2024-05-26',
+)
+# => [
+    {
+      start: #<DateTime: 2024-05-23T09:00:00--0700>
+      end: #<DateTime: 2024-05-23T09:30:00--0700>
+    },
+    {
+      start: #<DateTime: 2024-05-23T09:30:00--0700>
+      end: #<DateTime: 2024-05-23T10:00:00--0700>
+    },
+    {
+      start: #<DateTime: 2024-05-23T10:00:00--0700>
+      end: #<DateTime: 2024-05-23T10:30:00--0700>
+    },
+    {
+      start: #<DateTime: 2024-05-23T10:30:00--0700>
+      end: #<DateTime: 2024-05-23T11:00:00--0700>
     }
 ]
 ```

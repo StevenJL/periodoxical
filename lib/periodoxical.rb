@@ -66,6 +66,12 @@ module Periodoxical
     #     tue: { start_time: '11:30PM', end_time: '12:00AM' },
     #     fri: { start_time: '7:00PM', end_time: '9:00PM' },
     #   }
+    # @param [Integer] duration
+    #   Splits the time_blocks into this duration (in minutes). For example, if time_block is 9:00AM - 10:00AM,
+    #   and duration is 20 minutes.  It creates 3 timeblocks of:
+    #     - 9:00AM - 9:20AM
+    #     - 9:20AM - 9:40AM
+    #     - 9:40AM - 10:00AM
     def initialize(
       starting_from:,
       ending_at: nil,
@@ -79,6 +85,7 @@ module Periodoxical
       nth_day_of_week_in_month: nil,
       days_of_month: nil,
       weeks_of_month: nil,
+      duration: nil,
       months: nil
     )
 
@@ -97,6 +104,14 @@ module Periodoxical
       @starting_from = date_object_from(starting_from)
       @ending_at = date_object_from(ending_at)
       @limit = limit
+
+      if duration
+        unless duration.is_a?(Integer)
+          raise "duration must be an integer"
+        else
+          @duration = duration
+        end
+      end
       @exclusion_dates = if exclusion_dates && !exclusion_dates.empty?
                            exclusion_dates.map { |ed| Date.parse(ed) }
                          end
@@ -201,17 +216,29 @@ module Periodoxical
       return if overlaps_with_an_excluded_time?(time_block)
       return if before_starting_from_or_after_ending_at?(time_block)
 
-      @output << {
-        start: time_str_to_object(@current_date, time_block[:start_time]),
-        end: time_str_to_object(@current_date, time_block[:end_time])
-      }
+      strtm = time_str_to_object(@current_date, time_block[:start_time])
+      endtm = time_str_to_object(@current_date, time_block[:end_time])
 
-      # increment count, if `limit` is used to stop generating
-      @current_count = @current_count + 1
-      if @limit && @current_count == @limit
-        @keep_generating = false
-        throw :done
+      if @duration
+        split_by_duration_and_append(strtm, endtm)
+      else
+        @output << {
+          start: strtm,
+          end: endtm 
+        }
+        increment_and_check_limit
       end
+    end
+
+    # increment count, if `limit` is used to stop generating
+    def increment_and_check_limit
+      return unless @limit
+
+      @current_count += 1
+      return if @current_count < @limit
+
+      @keep_generating = false
+      throw :done
     end
 
     def advance_current_date_and_check_if_reached_end_date
@@ -408,6 +435,21 @@ module Periodoxical
       end
 
       false
+    end
+
+    def split_by_duration_and_append(strtm, endtm)
+      delta = Rational(@duration, 24 * 60)
+      si = strtm
+      ei = strtm + delta
+      while ei <= endtm
+        @output << {
+          start: si,
+          end: ei
+        }
+        si += delta
+        ei += delta
+        increment_and_check_limit
+      end
     end
   end
 end

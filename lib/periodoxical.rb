@@ -4,7 +4,6 @@ require "periodoxical/helpers"
 require "date"
 require "time"
 require "tzinfo"
-require "week_of_month"
 
 module Periodoxical
   class << self
@@ -84,7 +83,6 @@ module Periodoxical
       days_of_week: nil,
       nth_day_of_week_in_month: nil,
       days_of_month: nil,
-      weeks_of_month: nil,
       duration: nil,
       months: nil
     )
@@ -97,7 +95,6 @@ module Periodoxical
       end
       @nth_day_of_week_in_month = deep_symbolize_keys(nth_day_of_week_in_month)
       @days_of_month = days_of_month
-      @weeks_of_month = weeks_of_month
       @months = months
       @time_blocks = deep_symbolize_keys(time_blocks)
       @day_of_week_time_blocks = deep_symbolize_keys(day_of_week_time_blocks)
@@ -265,11 +262,6 @@ module Periodoxical
       # return false if current_date is explicitly excluded
       if @exclusion_dates
         return false if @exclusion_dates.include?(@current_date)
-      end
-
-      # If weeks_of_months are specified but not satisified, return false
-      if @weeks_of_month
-        return false unless @weeks_of_month.include?(@current_date.week_of_month)
       end
 
       # If months are specified, but current_date does not satisfy months,

@@ -209,7 +209,7 @@ Periodoxical.generate(
 )
 ```
 
-### Specifying time blocks using rules for day-of-month and/or week-of-month and/or month.
+### Specifying time blocks using rules for month(s) and/or day-of-month.
 
 As a Ruby dev, I want to generate the next 3 timeblocks for **8AM - 9AM** for the **5th** and **10th** day of every month starting from **June**.  I can do this using the `days_of_month` parameter.
 
@@ -240,42 +240,8 @@ Periodoxical.generate(
 ]
 ```
 
-As a Ruby dev, I want to generate **4** timeblocks for **8AM - 9AM** on **Mondays** but only in the **first two weeks** in the months of **April, May, and June**.  I can do this using the `months` parameter.
-
-```
-Periodoxical.generate(
-  time_zone: 'America/Los_Angeles',
-  starting_from: '2024-04-01',
-  limit: 4,
-  weeks_of_month: [1 2],
-  months: [4, 5, 6],
-  days_of_week: %w(mon),
-  time_blocks: [
-    { start_time: '8:00AM', end_time: '9:00AM' },
-  ],
-)
-#=> 
-[
-    {
-     start_time: #<DateTime: 2024-04-01T08:00:00-0700>,
-     end_time: #<DateTime: 2024-04-01T09:00:00-0700>,
-    },
-    {
-     start_time: #<DateTime: 2024-04-08T08:00:00-0700>,
-     end_time: #<DateTime: 2024-04-08T09:00:00-0700>,
-    },
-    {
-     start_time: #<DateTime: 2024-05-06T08:00:00-0700>,
-     end_time: #<DateTime: 2024-05-06T09:00:00-0700>,
-    },
-    {
-     start_time: #<DateTime: 2024-06-03T08:00:00-0700>,
-     end_time: #<DateTime: 2024-06-03T09:00:00-0700>,
-    },
-]
-```
-
 ### Specify nth day-of-week in month (ie. first Monday of the Month, second Tuesday of the Month, last Friday of Month)
+
 As a Ruby dev, I want to generate timeblocks for **8AM - 9AM** on the **first and second Mondays**  and **last Fridays** of every month starting in June 2024.  I can do this with the `nth_day_of_week_in_month` param.
 
 ```rb

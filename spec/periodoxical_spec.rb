@@ -547,51 +547,6 @@ RSpec.describe Periodoxical do
       end
     end
 
-    context 'when weeks_of_month and months is provided' do
-      subject do
-        Periodoxical.generate(
-          time_zone: 'America/Los_Angeles',
-          starting_from: '2024-04-1',
-          limit: 5,
-          weeks_of_month: [1, 2],
-          months: [4, 5, 6],
-          days_of_week: %w(mon),
-          time_blocks: [
-            { start_time: '8:00AM', end_time: '9:00AM' },
-          ],
-        )
-      end
-
-      it 'generates the right timeblocks' do
-        time_blocks = human_readable(subject)
-
-        expect(time_blocks).to eq(
-          [
-            {
-              :start=>"2024-04-01 08:00:00 -0700",
-              :end=>"2024-04-01 09:00:00 -0700"
-            },
-           {
-             :start=>"2024-04-08 08:00:00 -0700",
-             :end=>"2024-04-08 09:00:00 -0700"
-           },
-           {
-             :start=>"2024-05-06 08:00:00 -0700",
-             :end=>"2024-05-06 09:00:00 -0700"
-           },
-           {
-             :start=>"2024-06-03 08:00:00 -0700",
-             :end=>"2024-06-03 09:00:00 -0700"
-           },
-           {
-             :start=>"2025-04-07 08:00:00 -0700",
-             :end=>"2025-04-07 09:00:00 -0700"
-           },
-          ]
-        )
-      end
-    end
-
     context 'when nth_day_of_week_in_month is provided' do
       subject do
         Periodoxical.generate(

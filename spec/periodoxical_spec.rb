@@ -658,7 +658,7 @@ RSpec.describe Periodoxical do
               end_time: '5:00PM'
             },
           ],
-          duration: 30, #(minutes)
+          duration: 30, # minutes
           starting_from: '2024-05-23',
           ending_at: '2024-05-24',
         )
@@ -698,6 +698,70 @@ RSpec.describe Periodoxical do
             {:start=>"2024-05-24 16:00:00 -0700", :end=>"2024-05-24 16:30:00 -0700"},
             {:start=>"2024-05-24 16:30:00 -0700", :end=>"2024-05-24 17:00:00 -0700"}]
         )
+      end
+
+      context 'when exclusion_times is provided' do
+        subject do
+          Periodoxical.generate(
+            time_zone: 'America/Los_Angeles',
+            time_blocks: [
+              {
+                start_time: '9:00AM',
+                end_time: '1:00PM'
+              },
+              {
+                start_time: '2:00PM',
+                end_time: '5:00PM'
+              },
+            ],
+            duration: 30, # minutes
+            starting_from: '2024-05-23',
+            ending_at: '2024-05-24',
+            exclusion_times: [
+              {
+                start: '2024-05-23T10:30:00-07:00',
+                end: '2024-05-23T11:00:00-07:00'
+              }
+            ]
+          )
+        end
+
+        it 'works well with exclusion_times' do
+          time_blocks = human_readable(subject)
+
+          expect(time_blocks).to eq(
+            [
+              { :start=>"2024-05-23 09:00:00 -0700", :end=>"2024-05-23 09:30:00 -0700" },
+              { :start=>"2024-05-23 09:30:00 -0700", :end=>"2024-05-23 10:00:00 -0700" },
+              { :start=>"2024-05-23 10:00:00 -0700", :end=>"2024-05-23 10:30:00 -0700" },
+              # 10:30AM - 11:00AM on 5/23 was excluded
+              { :start=>"2024-05-23 11:00:00 -0700", :end=>"2024-05-23 11:30:00 -0700" },
+              { :start=>"2024-05-23 11:30:00 -0700", :end=>"2024-05-23 12:00:00 -0700" },
+              { :start=>"2024-05-23 12:00:00 -0700", :end=>"2024-05-23 12:30:00 -0700" },
+              { :start=>"2024-05-23 12:30:00 -0700", :end=>"2024-05-23 13:00:00 -0700" },
+              { :start=>"2024-05-23 14:00:00 -0700", :end=>"2024-05-23 14:30:00 -0700" },
+              { :start=>"2024-05-23 14:30:00 -0700", :end=>"2024-05-23 15:00:00 -0700" },
+              { :start=>"2024-05-23 15:00:00 -0700", :end=>"2024-05-23 15:30:00 -0700" },
+              { :start=>"2024-05-23 15:30:00 -0700", :end=>"2024-05-23 16:00:00 -0700" },
+              { :start=>"2024-05-23 16:00:00 -0700", :end=>"2024-05-23 16:30:00 -0700" },
+              { :start=>"2024-05-23 16:30:00 -0700", :end=>"2024-05-23 17:00:00 -0700" },
+              { :start=>"2024-05-24 09:00:00 -0700", :end=>"2024-05-24 09:30:00 -0700" },
+              { :start=>"2024-05-24 09:30:00 -0700", :end=>"2024-05-24 10:00:00 -0700" },
+              { :start=>"2024-05-24 10:00:00 -0700", :end=>"2024-05-24 10:30:00 -0700" },
+              { :start=>"2024-05-24 10:30:00 -0700", :end=>"2024-05-24 11:00:00 -0700" },
+              { :start=>"2024-05-24 11:00:00 -0700", :end=>"2024-05-24 11:30:00 -0700" },
+              { :start=>"2024-05-24 11:30:00 -0700", :end=>"2024-05-24 12:00:00 -0700" },
+              { :start=>"2024-05-24 12:00:00 -0700", :end=>"2024-05-24 12:30:00 -0700" },
+              { :start=>"2024-05-24 12:30:00 -0700", :end=>"2024-05-24 13:00:00 -0700" },
+              { :start=>"2024-05-24 14:00:00 -0700", :end=>"2024-05-24 14:30:00 -0700" },
+              { :start=>"2024-05-24 14:30:00 -0700", :end=>"2024-05-24 15:00:00 -0700" },
+              { :start=>"2024-05-24 15:00:00 -0700", :end=>"2024-05-24 15:30:00 -0700" },
+              { :start=>"2024-05-24 15:30:00 -0700", :end=>"2024-05-24 16:00:00 -0700" },
+              { :start=>"2024-05-24 16:00:00 -0700", :end=>"2024-05-24 16:30:00 -0700" },
+              { :start=>"2024-05-24 16:30:00 -0700", :end=>"2024-05-24 17:00:00 -0700" }
+            ]
+          )
+        end
       end
     end
 
@@ -788,6 +852,7 @@ RSpec.describe Periodoxical do
     end
 
     context 'when time_block_1 is before time_block_2 with no overlap' do
+      # 9-10 11-12
       let(:time_block_1) do
         {
           start: DateTime.parse("2024-06-03T9:00:00"),
@@ -797,7 +862,7 @@ RSpec.describe Periodoxical do
 
       let(:time_block_2) do
         {
-          start: DateTime.parse("2024-06-03T10:00:00"),
+          start: DateTime.parse("2024-06-03T11:00:00"),
           end: DateTime.parse("2024-06-03T12:00:00")
         }
       end
@@ -808,9 +873,10 @@ RSpec.describe Periodoxical do
     end
 
     context 'when time_block_1 is after time_block_2 with no overlap' do
+      # 11-12 vs 9-10
       let(:time_block_1) do
         {
-          start: DateTime.parse("2024-06-03T10:00:00"),
+          start: DateTime.parse("2024-06-03T11:00:00"),
           end: DateTime.parse("2024-06-03T12:00:00")
         }
       end
@@ -828,6 +894,7 @@ RSpec.describe Periodoxical do
     end
 
     context 'when time_block_1 overlaps with time_block_2 case 1 ' do
+      # 9-11 vs 10-12
       let(:time_block_1) do
         {
           start: DateTime.parse("2024-06-03T9:00:00"),
@@ -848,6 +915,7 @@ RSpec.describe Periodoxical do
     end
 
     context 'when time_block_1 overlaps with time_block_2 case 2 ' do
+      # 9-11 vs 10-12
       let(:time_block_2) do
         {
           start: DateTime.parse("2024-06-03T9:00:00"),
@@ -868,6 +936,7 @@ RSpec.describe Periodoxical do
     end
 
     context 'when one is contained entirely within the other' do
+      # 10-11 vs 9-12
       let(:time_block_1) do
         {
           start: DateTime.parse("2024-06-03T10:00:00"),
@@ -884,6 +953,88 @@ RSpec.describe Periodoxical do
 
       it 'returns true' do
         expect(subject).to eq(true)
+      end
+    end
+
+    context 'when time blocks are the same' do
+      let(:time_block_1) do
+        {
+          start: DateTime.parse("2024-06-03T10:00:00"),
+          end: DateTime.parse("2024-06-03T11:00:00")
+        }
+      end
+
+      let(:time_block_2) do
+        {
+          start: DateTime.parse("2024-06-03T10:00:00"),
+          end: DateTime.parse("2024-06-03T11:00:00")
+        }
+      end
+
+      it 'returns true' do
+        expect(subject).to eq(true)
+      end
+    end
+
+    context 'when time blocks start at the same time' do
+      # 10-11 vs 10-12
+      let(:time_block_1) do
+        {
+          start: DateTime.parse("2024-06-03T10:00:00"),
+          end: DateTime.parse("2024-06-03T11:00:00")
+        }
+      end
+
+      let(:time_block_2) do
+        {
+          start: DateTime.parse("2024-06-03T10:00:00"),
+          end: DateTime.parse("2024-06-03T12:00:00")
+        }
+      end
+
+      it 'returns true' do
+        expect(subject).to eq(true)
+      end
+    end
+
+    context 'when time blocks end at the same time' do
+      # 10-12 vs 11-12
+      let(:time_block_1) do
+        {
+          start: DateTime.parse("2024-06-03T10:00:00"),
+          end: DateTime.parse("2024-06-03T12:00:00")
+        }
+      end
+
+      let(:time_block_2) do
+        {
+          start: DateTime.parse("2024-06-03T11:00:00"),
+          end: DateTime.parse("2024-06-03T12:00:00")
+        }
+      end
+
+      it 'returns true' do
+        expect(subject).to eq(true)
+      end
+    end
+
+    context 'when time blocks are adjacent and touching' do
+      let(:time_block_1) do
+        {
+          start: DateTime.parse("2024-06-03T10:00:00"),
+          end: DateTime.parse("2024-06-03T11:00:00")
+        }
+      end
+
+      let(:time_block_2) do
+        {
+          start: DateTime.parse("2024-06-03T11:00:00"),
+          end: DateTime.parse("2024-06-03T12:00:00")
+        }
+      end
+
+      it 'returns false' do
+        expect(subject).to eq(false)
       end
     end
   end

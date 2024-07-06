@@ -148,7 +148,7 @@ module Periodoxical
     #   Ex: '9:00AM'
     # @param [Date] date
     def time_str_to_object(date, time_str)
-      time = Time.strptime(time_str, "%I:%M%p")
+      time = Time.strptime(time_str, '%I:%M%p')
       date_time = DateTime.new(
         date.year,
         date.month,
@@ -209,19 +209,19 @@ module Periodoxical
     #  }
     #  Generates time block but also checks if we should stop generating
     def append_to_output_and_check_limit(time_block)
-      # Check if this particular time is conflicts with any times from `exclusion_times`.
-      return if overlaps_with_an_excluded_time?(time_block)
-      return if before_starting_from_or_after_ending_at?(time_block)
-
       strtm = time_str_to_object(@current_date, time_block[:start_time])
       endtm = time_str_to_object(@current_date, time_block[:end_time])
 
       if @duration
         split_by_duration_and_append(strtm, endtm)
       else
+        # Check if this particular time is conflicts with any times from `exclusion_times`.
+        return if before_starting_from_or_after_ending_at?(time_block)
+        return if overlaps_with_an_excluded_time?({ start: strtm, end: endtm })
+
         @output << {
           start: strtm,
-          end: endtm 
+          end: endtm
         }
         increment_and_check_limit
       end
@@ -410,19 +410,22 @@ module Periodoxical
       false
     end
 
+    # @param [Hash] time_block
+    # Ex:
+    #   {
+    #     start: #<DateTime>,
+    #     end: #<DateTime>,
+    #   }
     # @return [Boolean]
     #   Whether or not the given `time_block` in the @current_date and
     #   @time_zone overlaps with the times in `exclusion_times`.
-    def overlaps_with_an_excluded_time?(time_block)
+    def overlaps_with_an_excluded_time?(tm_blck)
       return false unless @exclusion_times
 
       @exclusion_times.each do |exclusion_timeblock|
         return true if overlap?(
           exclusion_timeblock,
-          {
-            start: time_str_to_object(@current_date, time_block[:start_time]),
-            end: time_str_to_object(@current_date, time_block[:end_time]),
-          }
+          tm_blck
         )
       end
 
@@ -434,13 +437,15 @@ module Periodoxical
       si = strtm
       ei = strtm + delta
       while ei <= endtm
-        @output << {
-          start: si,
-          end: ei
-        }
+        unless overlaps_with_an_excluded_time?({ start: si, end: ei })
+          @output << {
+            start: si,
+            end: ei
+          }
+          increment_and_check_limit
+        end
         si += delta
         ei += delta
-        increment_and_check_limit
       end
     end
   end

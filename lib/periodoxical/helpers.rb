@@ -27,10 +27,13 @@ module Periodoxical
       tb_2_start = time_block_2[:start]
       tb_2_end = time_block_2[:end]
 
-      # Basicall overlap is when one starts before the other has ended
+      # Basically overlap is when one starts before the other has ended
       return true if tb_1_end > tb_2_start && tb_1_end < tb_2_end
       # By symmetry
       return true if tb_2_end > tb_1_start && tb_2_end < tb_1_end
+
+      # Handle the edge case where they start/end at the same time
+      return true if tb_1_start == tb_2_start || tb_1_end == tb_2_end
 
       false
     end

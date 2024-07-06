@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    periodoxical (2.2.0)
+    periodoxical (2.2.1)
       tzinfo (~> 2.0, >= 2.0.0)
 
 GEM

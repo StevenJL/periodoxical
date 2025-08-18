@@ -160,8 +160,9 @@ module Periodoxical
 
     # @param [String] time_str
     #   Ex: '9:00AM'
-    # @return [Date] date
+    # @param [Date] date
     #
+    # @return [DateTime]
     # Converts a local date and time string to UTC and returns a DateTime with the
     # timezone offset corresponding to the zone period at that instant.
     # Handles DST transitions explicitly:

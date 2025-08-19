@@ -562,6 +562,39 @@ Periodoxical.generate(
 ]
 ```
 
+### Daylight Saving Time (DST) handling
+
+Periodoxical supports explicit strategies for DST edge cases when converting local times to UTC:
+
+- ambiguous_time: how to resolve fall-back ambiguous local times (e.g., 01:30 occurs twice)
+  - :first → choose the first occurrence (usually daylight time)
+  - :last → choose the second occurrence (standard time)
+  - :raise → raise TZInfo::AmbiguousTime (default)
+- gap_strategy: how to handle spring-forward missing local times (e.g., 02:30 does not exist)
+  - :advance → move forward by gap_shift_minutes to the next valid local time
+  - :skip → drop the invalid block
+  - :raise → raise TZInfo::PeriodNotFound (default)
+- gap_shift_minutes: integer minutes to advance when gap_strategy is :advance (default: 60)
+
+Example: be resilient around DST changes
+
+```rb
+Periodoxical.generate(
+  time_zone: 'America/Los_Angeles',
+  ambiguous_time: :last,      # pick standard time on fall back
+  gap_strategy: :advance,     # move to next valid time on spring forward
+  gap_shift_minutes: 60,
+  starting_from: '2025-03-01',
+  ending_at:   '2025-11-30',
+  time_blocks: [ { start_time: '1:30AM', end_time: '2:30AM' } ]
+)
+```
+
+Notes:
+- Period offsets are applied based on the period at that instant, not the current period.
+- If you choose `gap_strategy: :skip`, blocks that convert to invalid local times will be omitted.
+
+
 ## Development
 
 After checking out the repo, run `bin/setup` to install dependencies. Then, run `rake spec` to run the tests. You can also run `bin/console` for an interactive prompt that will allow you to experiment.

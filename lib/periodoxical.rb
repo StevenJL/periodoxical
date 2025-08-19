@@ -71,6 +71,14 @@ module Periodoxical
     #     - 9:00AM - 9:20AM
     #     - 9:20AM - 9:40AM
     #     - 9:40AM - 10:00AM
+    # @param [Symbol] ambiguous_time
+    #   How to resolve DST fall-back ambiguous local times (e.g. 01:30 occurs twice).
+    #   Allowed: :first (daylight time), :last (standard time), :raise (default).
+    # @param [Symbol] gap_strategy
+    #   How to handle DST spring-forward missing local times (e.g. 02:30 does not exist).
+    #   Allowed: :advance (shift forward), :skip (omit block), :raise (default).
+    # @param [Integer] gap_shift_minutes
+    #   Minutes to advance when gap_strategy is :advance. Default: 60.
     def initialize(
       starting_from:,
       ending_at: nil,
@@ -84,10 +92,16 @@ module Periodoxical
       nth_day_of_week_in_month: nil,
       days_of_month: nil,
       duration: nil,
-      months: nil
+      months: nil,
+      ambiguous_time: :raise,
+      gap_strategy: :raise,
+      gap_shift_minutes: 60
     )
 
       @time_zone = TZInfo::Timezone.get(time_zone)
+      @ambiguous_time = ambiguous_time
+      @gap_strategy = gap_strategy
+      @gap_shift_minutes = gap_shift_minutes
       if days_of_week.is_a?(Array)
         @days_of_week = deep_symbolize_keys(days_of_week)
       elsif days_of_week.is_a?(Hash)
@@ -147,6 +161,13 @@ module Periodoxical
     # @param [String] time_str
     #   Ex: '9:00AM'
     # @param [Date] date
+    #
+    # @return [DateTime]
+    # Converts a local date and time string to UTC and returns a DateTime with the
+    # timezone offset corresponding to the zone period at that instant.
+    # Handles DST transitions explicitly:
+    #  - Ambiguous (fall-back) times resolved via `@ambiguous_time`.
+    #  - Missing (spring-forward) times handled via `@gap_strategy` and `@gap_shift_minutes`.
     def time_str_to_object(date, time_str)
       time = Time.strptime(time_str, '%I:%M%p')
       date_time = DateTime.new(
@@ -157,7 +178,51 @@ module Periodoxical
         time.min,
         time.sec,
       )
-      @time_zone.local_to_utc(date_time).new_offset(@time_zone.current_period.offset.utc_total_offset)
+      utc_time = begin
+        @time_zone.local_to_utc(date_time) do |periods|
+          case @ambiguous_time
+          when :first
+            periods.first
+          when :last
+            periods.last
+          when :raise
+            raise TZInfo::AmbiguousTime, date_time.to_s
+          else
+            periods.last
+          end
+        end
+      rescue TZInfo::AmbiguousTime
+        case @ambiguous_time
+        when :first
+          @time_zone.local_to_utc(date_time) { |periods| periods.first }
+        when :last
+          @time_zone.local_to_utc(date_time) { |periods| periods.last }
+        else
+          raise
+        end
+      rescue TZInfo::PeriodNotFound
+        case @gap_strategy
+        when :advance
+          step = Rational(@gap_shift_minutes, 24 * 60)
+          shifted = date_time
+          attempts = 0
+          begin
+            shifted += step
+            attempts += 1
+            raise TZInfo::PeriodNotFound if attempts > 240
+            @time_zone.local_to_utc(shifted)
+          rescue TZInfo::PeriodNotFound
+            retry
+          end
+        when :skip
+          return nil
+        else
+          raise
+        end
+      end
+
+      period_at_utc = @time_zone.period_for_utc(utc_time)
+      utc_time.new_offset(period_at_utc.offset.utc_total_offset)
     end
 
     # @param [Date] date
@@ -211,6 +276,8 @@ module Periodoxical
     def append_to_output_and_check_limit(time_block)
       strtm = time_str_to_object(@current_date, time_block[:start_time])
       endtm = time_str_to_object(@current_date, time_block[:end_time])
+
+      return if strtm.nil? || endtm.nil?
 
       if @duration
         split_by_duration_and_append(strtm, endtm)
@@ -395,6 +462,7 @@ module Periodoxical
 
       if @starting_from.is_a?(DateTime)
         start_time = time_str_to_object(@current_date, time_block[:start_time])
+        return false if start_time.nil?
 
         # If the candidate time block is starting earlier than @starting_from, we want to skip it
         return true if start_time < @starting_from
@@ -402,6 +470,7 @@ module Periodoxical
 
       if @ending_at.is_a?(DateTime)
         end_time = time_str_to_object(@current_date, time_block[:end_time])
+        return false if end_time.nil?
 
         # If the candidate time block is ending after @ending_at, we want to skip it
         return true if end_time > @ending_at

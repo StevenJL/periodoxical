@@ -37,6 +37,105 @@ RSpec.describe Periodoxical do
       end
     end
 
+    context 'DST transitions' do
+      context 'fall back (ambiguous hour)' do
+        it 'resolves to standard time (-0800) when ambiguous_time: :last' do
+          time_blocks = human_readable(
+            Periodoxical.generate(
+              time_zone: 'America/Los_Angeles',
+              starting_from: '2025-11-02',
+              ending_at: '2025-11-02',
+              ambiguous_time: :last,
+              time_blocks: [
+                { start_time: '1:30AM', end_time: '2:00AM' }
+              ]
+            )
+          )
+
+          expect(time_blocks).to eq([
+            { start: '2025-11-02 01:30:00 -0800', end: '2025-11-02 02:00:00 -0800' }
+          ])
+        end
+
+        it 'resolves to daylight time (-0700) for the first occurrence when ambiguous_time: :first' do
+          time_blocks = human_readable(
+            Periodoxical.generate(
+              time_zone: 'America/Los_Angeles',
+              starting_from: '2025-11-02',
+              ending_at: '2025-11-02',
+              ambiguous_time: :first,
+              time_blocks: [
+                { start_time: '1:30AM', end_time: '2:00AM' }
+              ]
+            )
+          )
+
+          expect(time_blocks).to eq([
+            { start: '2025-11-02 01:30:00 -0700', end: '2025-11-02 02:00:00 -0800' }
+          ])
+        end
+
+        it 'raises when ambiguous_time is :raise (default)' do
+          expect do
+            Periodoxical.generate(
+              time_zone: 'America/Los_Angeles',
+              starting_from: '2025-11-02',
+              ending_at: '2025-11-02',
+              time_blocks: [
+                { start_time: '1:30AM', end_time: '2:00AM' }
+              ]
+            )
+          end.to raise_error(TZInfo::AmbiguousTime)
+        end
+      end
+
+      context 'spring forward (missing hour)' do
+        it 'advances the missing local end time when gap_strategy: :advance' do
+          time_blocks = human_readable(
+            Periodoxical.generate(
+              time_zone: 'America/Los_Angeles',
+              starting_from: '2025-03-09',
+              ending_at: '2025-03-09',
+              gap_strategy: :advance,
+              time_blocks: [
+                { start_time: '1:30AM', end_time: '2:30AM' }
+              ]
+            )
+          )
+
+          expect(time_blocks).to eq([
+            { start: '2025-03-09 01:30:00 -0800', end: '2025-03-09 03:30:00 -0700' }
+          ])
+        end
+
+        it 'skips invalid blocks when gap_strategy: :skip' do
+          result = Periodoxical.generate(
+            time_zone: 'America/Los_Angeles',
+            starting_from: '2025-03-09',
+            ending_at: '2025-03-09',
+            gap_strategy: :skip,
+            time_blocks: [
+              { start_time: '2:30AM', end_time: '3:00AM' }
+            ]
+          )
+          expect(result).to eq([])
+        end
+
+        it 'raises when gap_strategy is :raise (default)' do
+          expect do
+            Periodoxical.generate(
+              time_zone: 'America/Los_Angeles',
+              starting_from: '2025-03-09',
+              ending_at: '2025-03-09',
+              time_blocks: [
+                { start_time: '2:30AM', end_time: '3:00AM' }
+              ]
+            )
+          end.to raise_error(TZInfo::PeriodNotFound)
+        end
+      end
+    end
+
     context 'when only time_blocks are provided' do
       subject do
         Periodoxical.generate(

@@ -158,9 +158,9 @@ module Periodoxical
 
     private
 
+    # @param [Date] date
     # @param [String] time_str
     #   Ex: '9:00AM'
-    # @param [Date] date
     #
     # @return [DateTime]
     # Converts a local date and time string to UTC and returns a DateTime with the
